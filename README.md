@@ -41,9 +41,15 @@ Run `npx pod-install` after installing the npm package. Sine we only support `St
 
 ## Sponsors
 
+## Sponsors
+
 ### <p style="color: gold;">Gold Tier</p>
 
-| [NAMI](https://namiml.com) |
-| :-: |
-| <a href="https://namiml.com"><img src="https://github.com/dooboolab-community/react-native-iap/assets/27461460/89d71f61-bb73-400a-83bd-fe0f96eb726e" width="450"/></a> |
-| Since 2023 Dec |
+<a href="https://www.courier.com/?utm_source=react-native-iap&utm_campaign=osssponsors">
+    <img width="420" alt="courier_dot_com" src="https://github.com/user-attachments/assets/319d8966-6839-498d-8ead-ce8cc72c3bca" />
+</a>
+
+## Past Sponsors
+
+<a href="https://namiml.com"><img src="https://github.com/hyochan/react-native-iap/assets/27461460/89d71f61-bb73-400a-83bd-fe0f96eb726e" width="280"/></a>
+
