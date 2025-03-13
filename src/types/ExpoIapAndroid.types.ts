@@ -1,38 +1,9 @@
+import {PurchaseBase, ProductBase} from '../ExpoIap.types';
+
 type OneTimePurchaseOfferDetails = {
   priceCurrencyCode: string;
   formattedPrice: string;
   priceAmountMicros: string;
-};
-
-type SubscriptionOfferDetail = {
-  basePlanId: string;
-  offerId: string;
-  offerToken: string;
-  offerTags: string[];
-  pricingPhases: PricingPhases;
-};
-
-type PricingPhases = {
-  pricingPhaseList: PricingPhase[];
-};
-
-type PricingPhase = {
-  formattedPrice: string;
-  priceCurrencyCode: string;
-  billingPeriod: string;
-  billingCycleCount: number;
-  priceAmountMicros: string;
-  recurrenceMode: number;
-};
-
-export type ProductAndroid = {
-  productId: string;
-  title: string;
-  description: string;
-  productType: string;
-  name: string;
-  oneTimePurchaseOfferDetails?: OneTimePurchaseOfferDetails;
-  subscriptionOfferDetails?: SubscriptionOfferDetail[];
 };
 
 type PricingPhaseAndroid = {
@@ -45,19 +16,33 @@ type PricingPhaseAndroid = {
   recurrenceMode: number;
 };
 
+type PricingPhasesAndroid = {
+  pricingPhaseList: PricingPhaseAndroid[];
+};
+
+type SubscriptionOfferDetail = {
+  basePlanId: string;
+  offerId: string;
+  offerToken: string;
+  offerTags: string[];
+  pricingPhases: PricingPhasesAndroid;
+};
+
+export type ProductAndroid = ProductBase & {
+  name: string;
+  oneTimePurchaseOfferDetails?: OneTimePurchaseOfferDetails;
+  subscriptionOfferDetails?: SubscriptionOfferDetail[];
+};
+
 type SubscriptionOfferAndroid = {
   basePlanId: string;
   offerId: string | null;
   offerToken: string;
-  pricingPhases: {pricingPhaseList: PricingPhaseAndroid[]};
+  pricingPhases: PricingPhasesAndroid;
   offerTags: string[];
 };
 
 export type SubscriptionProductAndroid = ProductAndroid & {
-  name: string;
-  title: string;
-  description: string;
-  productId: string;
   subscriptionOfferDetails: SubscriptionOfferAndroid[];
 };
 
@@ -121,3 +106,22 @@ export enum FeatureTypeAndroid {
   /** Subscriptions update/replace. */
   SUBSCRIPTIONS_UPDATE = 'SUBSCRIPTIONS_UPDATE',
 }
+
+export enum PurchaseStateAndroid {
+  UNSPECIFIED_STATE = 0,
+  PURCHASED = 1,
+  PENDING = 2,
+}
+
+export type ProductPurchaseAndroid = PurchaseBase & {
+  ids?: string[];
+  dataAndroid?: string;
+  signatureAndroid?: string;
+  autoRenewingAndroid?: boolean;
+  purchaseStateAndroid?: PurchaseStateAndroid;
+  isAcknowledgedAndroid?: boolean;
+  packageNameAndroid?: string;
+  developerPayloadAndroid?: string;
+  obfuscatedAccountIdAndroid?: string;
+  obfuscatedProfileIdAndroid?: string;
+};

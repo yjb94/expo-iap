@@ -1,16 +1,11 @@
 import {Platform} from 'react-native';
 import {emitter, IapEvent} from '..';
-import {Product, PurchaseError, SubscriptionProduct} from '../ExpoIap.types';
-import type {
-  ProductIos,
-  ProductStatusIos,
-  SubscriptionProductIos,
-  TransactionSk2,
-} from '../types/ExpoIapIos.types';
+import {ProductPurchase, PurchaseError} from '../ExpoIap.types';
+import type {ProductStatusIos} from '../types/ExpoIapIos.types';
 import ExpoIapModule from '../ExpoIapModule';
 
 export type TransactionEvent = {
-  transaction?: TransactionSk2;
+  transaction?: ProductPurchase;
   error?: PurchaseError;
 };
 
@@ -25,17 +20,25 @@ export const transactionUpdatedIos = (
   return emitter.addListener(IapEvent.TransactionIapUpdated, listener);
 };
 
+// Type guards
+export function isProductIos<T extends {platform?: string}>(
+  item: unknown,
+): item is T & {platform: 'ios'} {
+  return (
+    item != null &&
+    typeof item === 'object' &&
+    'platform' in item &&
+    item.platform === 'ios'
+  );
+}
+
+export function isSubscriptionProductIos<T extends {platform?: string}>(
+  item: unknown,
+): item is T & {platform: 'ios'} {
+  return isProductIos(item);
+}
+
 // Functions
-export function isProductIos(product: Product): product is ProductIos {
-  return (product as ProductIos)?.displayName !== undefined;
-}
-
-export function isSubscriptionProductIos(
-  product: SubscriptionProduct,
-): product is SubscriptionProductIos {
-  return (product as SubscriptionProductIos)?.displayName !== undefined;
-}
-
 /**
  * Sync state with Appstore (iOS only)
  * https://developer.apple.com/documentation/storekit/appstore/3791906-sync
@@ -58,13 +61,13 @@ export const subscriptionStatus = (sku: string): Promise<ProductStatusIos[]> =>
 /**
  *
  */
-export const currentEntitlement = (sku: string): Promise<TransactionSk2> =>
+export const currentEntitlement = (sku: string): Promise<ProductPurchase> =>
   ExpoIapModule.currentEntitlement(sku);
 
 /**
  *
  */
-export const latestTransaction = (sku: string): Promise<TransactionSk2> =>
+export const latestTransaction = (sku: string): Promise<ProductPurchase> =>
   ExpoIapModule.latestTransaction(sku);
 
 /**

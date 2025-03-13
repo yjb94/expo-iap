@@ -2,7 +2,6 @@
 // and on native platforms to ExpoIap.ts
 import {NativeModulesProxy, EventEmitter} from 'expo-modules-core';
 import {Platform} from 'react-native';
-
 import {
   Product,
   ProductPurchase,
@@ -21,13 +20,14 @@ import {
 } from './types/ExpoIapAndroid.types';
 import {
   PaymentDiscount,
-  ProductIos,
   RequestPurchaseIosProps,
   RequestSubscriptionIosProps,
-  SubscriptionProductIos,
-  TransactionSk2,
 } from './types/ExpoIapIos.types';
-import {isProductIos} from './modules/ios';
+import {isProductIos, isSubscriptionProductIos} from './modules/ios';
+import {
+  isProductAndroid,
+  isSubscriptionProductAndroid,
+} from './modules/android';
 
 export * from './modules/android';
 export * from './modules/ios';
@@ -76,16 +76,17 @@ export const getProducts = async (skus: string[]): Promise<Product[]> => {
 
   return Platform.select({
     ios: async () => {
-      const items = (await ExpoIapModule.getItems(skus)) as ProductIos[];
-      return items.filter((item: ProductIos) => isProductIos(item));
+      const items = await ExpoIapModule.getItems(skus);
+      return items.filter((item: unknown) => isProductIos<Product>(item));
     },
     android: async () => {
       const products = await ExpoIapModule.getItemsByType(
         ProductType.InAppPurchase,
         skus,
       );
-
-      return products;
+      return products.filter((product: unknown) =>
+        isProductAndroid<Product>(product),
+      );
     },
     default: () => Promise.reject(new Error('Unsupported Platform')),
   })();
@@ -99,15 +100,33 @@ export const getSubscriptions = async (
   }
 
   return Platform.select({
-    ios: async (): Promise<SubscriptionProductIos[]> => {
-      const items: SubscriptionProductIos[] = (
-        (await ExpoIapModule.getItems(skus)) as SubscriptionProductIos[]
-      ).filter((item: SubscriptionProductIos) => skus.includes(item.id));
+    ios: async () => {
+      const rawItems = await ExpoIapModule.getItems(skus);
 
-      return items;
+      return rawItems.filter((item: unknown) => {
+        if (!isSubscriptionProductIos(item)) return false;
+        return (
+          typeof item === 'object' &&
+          item !== null &&
+          'id' in item &&
+          typeof item.id === 'string' &&
+          skus.includes(item.id)
+        );
+      }) as SubscriptionProduct[];
     },
     android: async () => {
-      return ExpoIapModule.getItemsByType('subs', skus);
+      const rawItems = await ExpoIapModule.getItemsByType('subs', skus);
+
+      return rawItems.filter((item: unknown) => {
+        if (!isSubscriptionProductAndroid(item)) return false;
+        return (
+          typeof item === 'object' &&
+          item !== null &&
+          'id' in item &&
+          typeof item.id === 'string' &&
+          skus.includes(item.id)
+        );
+      }) as SubscriptionProduct[];
     },
     default: () => Promise.reject(new Error('Unsupported Platform')),
   })();
@@ -119,11 +138,9 @@ export async function endConnection(): Promise<boolean> {
 
 export const getPurchaseHistory = ({
   alsoPublishToEventListener = false,
-  automaticallyFinishRestoredTransactions = true,
   onlyIncludeActiveItems = false,
 }: {
   alsoPublishToEventListener?: boolean;
-  automaticallyFinishRestoredTransactions?: boolean;
   onlyIncludeActiveItems?: boolean;
 } = {}): Promise<ProductPurchase[]> =>
   (
@@ -150,11 +167,9 @@ export const getPurchaseHistory = ({
 
 export const getAvailablePurchases = ({
   alsoPublishToEventListener = false,
-  automaticallyFinishRestoredTransactions = false,
   onlyIncludeActiveItems = true,
 }: {
   alsoPublishToEventListener?: boolean;
-  automaticallyFinishRestoredTransactions?: boolean;
   onlyIncludeActiveItems?: boolean;
 } = {}): Promise<ProductPurchase[]> =>
   (
@@ -193,43 +208,6 @@ const offerToRecordIos = (
   };
 };
 
-const iosTransactionToPurchaseMap = ({
-  id,
-  originalPurchaseDate,
-  productID,
-  purchaseDate,
-  purchasedQuantity,
-  originalID,
-  verificationResult,
-  appAccountToken,
-  jsonRepresentation,
-}: TransactionSk2): Purchase => {
-  let transactionReasonIOS;
-
-  try {
-    if (jsonRepresentation) {
-      const transactionData = JSON.parse(jsonRepresentation);
-      transactionReasonIOS = transactionData.transactionReason;
-    }
-  } catch (e) {
-    console.log('SK2 Error parsing jsonRepresentation', e);
-  }
-  const purchase: Purchase = {
-    productId: productID,
-    transactionId: String(id),
-    transactionDate: purchaseDate, //??
-    transactionReceipt: '', // Not available
-    purchaseToken: '', //Not available
-    quantityIOS: purchasedQuantity,
-    originalTransactionDateIOS: originalPurchaseDate,
-    originalTransactionIdentifierIOS: originalID,
-    verificationResultIOS: verificationResult ?? '',
-    appAccountToken: appAccountToken ?? '',
-    transactionReasonIOS: transactionReasonIOS ?? '',
-  };
-  return purchase;
-};
-
 export const requestPurchase = (
   request: RequestPurchaseIosProps | RequestPurchaseAndroidProps,
 ): Promise<ProductPurchase | ProductPurchase[] | void> =>
@@ -240,31 +218,17 @@ export const requestPurchase = (
           throw new Error('sku is required for iOS purchase');
         }
 
-        const {
-          sku,
-          andDangerouslyFinishTransactionAutomaticallyIOS = false,
-          appAccountToken,
-          quantity,
-          withOffer,
-        } = request;
-
-        if (andDangerouslyFinishTransactionAutomaticallyIOS) {
-          console.warn(
-            'You are dangerously allowing expo-iap to finish your transaction automatically. You should set andDangerouslyFinishTransactionAutomatically to false when calling requestPurchase and call finishTransaction manually when you have delivered the purchased goods to the user. It defaults to true to provide backwards compatibility. Will default to false in version 4.0.0.',
-          );
-        }
+        const {sku, appAccountToken, quantity, withOffer} = request;
 
         const offer = offerToRecordIos(withOffer);
 
-        const result = await ExpoIapModule.buyProduct(
+        const purchase = await ExpoIapModule.buyProduct(
           sku,
-          andDangerouslyFinishTransactionAutomaticallyIOS,
           appAccountToken,
           quantity ?? -1,
           offer,
         );
 
-        const purchase = iosTransactionToPurchaseMap(result);
         return Promise.resolve(purchase);
       },
       android: async () => {
@@ -303,35 +267,21 @@ export const requestSubscription = (
           throw new Error('sku is required for iOS subscriptions');
         }
 
-        const {
-          sku,
-          andDangerouslyFinishTransactionAutomaticallyIOS = false,
-          appAccountToken,
-          quantity,
-          withOffer,
-        } = request as RequestSubscriptionIosProps;
-
-        if (andDangerouslyFinishTransactionAutomaticallyIOS) {
-          console.warn(
-            'You are dangerously allowing expo-iap to finish your transaction automatically. You should set andDangerouslyFinishTransactionAutomatically to false when calling requestPurchase and call finishTransaction manually when you have delivered the purchased goods to the user. It defaults to true to provide backwards compatibility. Will default to false in version 4.0.0.',
-          );
-        }
+        const {sku, appAccountToken, quantity, withOffer} =
+          request as RequestSubscriptionIosProps;
 
         const offer = offerToRecordIos(withOffer);
 
-        const purchase = iosTransactionToPurchaseMap(
-          await ExpoIapModule.buyProduct(
-            sku,
-            andDangerouslyFinishTransactionAutomaticallyIOS,
-            appAccountToken,
-            quantity ?? -1,
-            offer,
-          ),
+        const purchase = await ExpoIapModule.buyProduct(
+          sku,
+          appAccountToken,
+          quantity ?? -1,
+          offer,
         );
-        return Promise.resolve(purchase);
+
+        return Promise.resolve(purchase as SubscriptionPurchase);
       },
       android: async () => {
-        console.log('requestSubscription', request);
         const {
           skus,
           isOfferPersonalized,

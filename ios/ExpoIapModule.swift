@@ -16,6 +16,94 @@ struct IapEvent {
 }
 
 @available(iOS 15.0, *)
+func serializeTransaction(_ transaction: Transaction) -> [String: Any?] {
+    // Determine if this is a subscription by productType or expirationDate
+    let isSubscription = transaction.productType.rawValue.lowercased().contains("renewable") || transaction.expirationDate != nil
+    
+    // Parse transaction reason from jsonRepresentation if available
+    var transactionReasonIos: String? = nil
+    var webOrderLineItemId: Int? = nil
+    var jsonData: [String: Any]? = nil
+    
+    if let jsonRep = transaction.jsonRepresentation, 
+       let jsonObj = try? JSONSerialization.jsonObject(with: jsonRep) as? [String: Any] {
+        jsonData = jsonObj
+        if let reason = jsonObj["transactionReason"] as? String {
+            transactionReasonIos = reason
+        }
+        if let webOrderId = jsonObj["webOrderLineItemID"] as? NSNumber {
+            webOrderLineItemId = webOrderId.intValue
+        }
+    }
+
+    // Create base purchase object that matches Purchase type in TypeScript
+    var purchaseMap: [String: Any?] = [
+        // Core purchase fields
+        "id": transaction.productID,
+        "ids": [transaction.productID],
+        "transactionId": String(transaction.id),
+        "transactionDate": transaction.purchaseDate.timeIntervalSince1970 * 1000,
+        "transactionReceipt": "", // Not available in StoreKit 2
+        "purchaseToken": "", // Not applicable on iOS
+        
+        // iOS specific fields - basic info
+        "quantityIos": transaction.purchasedQuantity,
+        "originalTransactionDateIos": transaction.originalPurchaseDate?.timeIntervalSince1970 * 1000,
+        "originalTransactionIdentifierIos": transaction.originalID,
+        "verificationResultIos": transaction.verificationResult?.rawValue,
+        "appAccountToken": transaction.appAccountToken?.uuidString,
+        
+        // Environment and Storefront
+        "environmentIos": transaction.environment?.rawValue,
+        "storefrontCountryCodeIos": transaction.storefront?.countryCode,
+        
+        // Transaction Identifiers
+        "webOrderLineItemIdIos": webOrderLineItemId,
+        
+        // App and Product Identifiers
+        "appBundleIdIos": transaction.appBundleID,
+        "productTypeIos": transaction.productType.rawValue,
+        "subscriptionGroupIdIos": transaction.subscriptionGroupID,
+        
+        // Purchase and Expiration Dates
+        "expirationDateIos": transaction.expirationDate?.timeIntervalSince1970 * 1000,
+        
+        // Purchase Details
+        "isUpgradedIos": transaction.isUpgraded,
+        "ownershipTypeIos": transaction.ownershipType.rawValue,
+        
+        // Transaction Reason
+        "reasonIos": transaction.reason.rawValue,
+        "reasonStringRepresentationIos": transaction.reasonStringRepresentation,
+        "transactionReasonIos": transactionReasonIos,
+        
+        // Revocation Status
+        "revocationDateIos": transaction.revocationDate?.timeIntervalSince1970 * 1000,
+        "revocationReasonIos": transaction.revocationReason?.rawValue
+    ]
+    
+    // Add offer information if available
+    if let offer = transaction.offer {
+        purchaseMap["offerIos"] = [
+            "id": offer.id,
+            "type": offer.type.rawValue,
+            "paymentMode": offer.paymentMode.rawValue
+        ]
+    }
+    
+    // Add additional pricing info if available
+    if #available(iOS 15.4, *), let priceInfo = jsonData?["price"] as? NSNumber {
+        purchaseMap["priceIos"] = priceInfo.doubleValue
+    }
+    
+    if #available(iOS 15.4, *), let currencyInfo = jsonData?["currency"] as? String {
+        purchaseMap["currencyIos"] = currencyInfo
+    }
+    
+    return purchaseMap
+}
+
+@available(iOS 15.0, *)
 func serializeProduct(_ p: Product) -> [String: Any?] {
     return [
         "debugDescription": serializeDebug(p.debugDescription),
@@ -23,24 +111,31 @@ func serializeProduct(_ p: Product) -> [String: Any?] {
         "displayName": p.displayName,
         "displayPrice": p.displayPrice,
         "id": p.id,
+        "title": p.displayName, 
         "isFamilyShareable": p.isFamilyShareable,
         "jsonRepresentation": serializeDebug(String(data: p.jsonRepresentation, encoding: .utf8) ?? ""),
         "price": p.price,
         "subscription": p.subscription,
         "type": p.type,
-        "currency": p.priceFormatStyle.currencyCode
+        "currency": p.priceFormatStyle.currencyCode,
+        "platform": "ios"  // Add platform identifier
     ]
 }
 
 @available(iOS 15.0, *)
-func serializeTransaction(_ transaction: Transaction) -> [String: Any?] {
-    return [
-        "id": transaction.id,
-        "productID": transaction.productID,
-        "purchaseDate": transaction.purchaseDate,
-        "expirationDate": transaction.expirationDate,
-        "originalID": transaction.originalID
-    ]
+func serialize(_ transaction: Transaction, _ result: VerificationResult<Transaction>) -> [String: Any?] {
+    return serializeTransaction(transaction)
+}
+
+@available(iOS 15.0, *)
+@Sendable func serialize(_ rs: Transaction.RefundRequestStatus?) -> String? {
+    guard let rs = rs else { return nil }
+    switch rs {
+    case .success: return "success"
+    case .userCancelled: return "userCancelled"
+    default:
+        return nil
+    }
 }
 
 @available(iOS 15.0, *)

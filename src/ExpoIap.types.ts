@@ -1,82 +1,82 @@
 import {
   ProductAndroid,
+  ProductPurchaseAndroid,
   RequestPurchaseAndroidProps,
   RequestSubscriptionAndroidProps,
   SubscriptionProductAndroid,
 } from './types/ExpoIapAndroid.types';
 import {
   ProductIos,
+  ProductPurchaseIos,
   RequestPurchaseIosProps,
   RequestSubscriptionIosProps,
   SubscriptionProductIos,
 } from './types/ExpoIapIos.types';
+
 export type ChangeEventPayload = {
   value: string;
 };
 
-export type Product = ProductAndroid | ProductIos;
+/**
+ * Base product type with common properties shared between iOS and Android
+ */
+export type ProductBase = {
+  id: string;
+  title: string;
+  description: string;
+  type: ProductType;
+  displayName?: string;
+  displayPrice?: string;
+  price?: number;
+  currency?: string;
+};
+
+// Define literal platform types for better type discrimination
+export type IosPlatform = {platform: 'ios'};
+export type AndroidPlatform = {platform: 'android'};
+
 export enum ProductType {
   InAppPurchase = 'inapp',
   Subscription = 'subs',
 }
 
-export type SubscriptionProduct =
-  | SubscriptionProductAndroid
-  | SubscriptionProductIos;
+// Common base purchase type
+export type PurchaseBase = {
+  id: string;
+  transactionId?: string;
+  transactionDate: number;
+  transactionReceipt: string;
+  purchaseToken?: string;
+};
+
+// Union type for platform-specific product types with proper discriminators
+export type Product =
+  | (ProductAndroid & AndroidPlatform)
+  | (ProductIos & IosPlatform);
+
+// Union type for platform-specific purchase types with proper discriminators
+export type ProductPurchase =
+  | (ProductPurchaseAndroid & AndroidPlatform)
+  | (ProductPurchaseIos & IosPlatform);
+
+// Union type for platform-specific subscription purchase types with proper discriminators
+export type SubscriptionPurchase =
+  | (ProductPurchaseAndroid & AndroidPlatform & { autoRenewingAndroid: boolean })
+  | (ProductPurchaseIos & IosPlatform);
+
+export type Purchase = ProductPurchase | SubscriptionPurchase;
 
 export type RequestPurchaseProps =
   | RequestPurchaseIosProps
   | RequestPurchaseAndroidProps;
 
-enum PurchaseStateAndroid {
-  UNSPECIFIED_STATE = 0,
-  PURCHASED = 1,
-  PENDING = 2,
-}
-
-export type ProductPurchase = {
-  productId: string;
-  transactionId?: string;
-  transactionDate: number;
-  transactionReceipt: string;
-  purchaseToken?: string;
-  //iOS
-  quantityIOS?: number;
-  originalTransactionDateIOS?: number;
-  originalTransactionIdentifierIOS?: string;
-  verificationResultIOS?: string;
-  appAccountToken?: string;
-  //Android
-  productIds?: string[];
-  dataAndroid?: string;
-  signatureAndroid?: string;
-  autoRenewingAndroid?: boolean;
-  purchaseStateAndroid?: PurchaseStateAndroid;
-  isAcknowledgedAndroid?: boolean;
-  packageNameAndroid?: string;
-  developerPayloadAndroid?: string;
-  obfuscatedAccountIdAndroid?: string;
-  obfuscatedProfileIdAndroid?: string;
-};
+export type SubscriptionProduct =
+  | (SubscriptionProductAndroid & AndroidPlatform)
+  | (SubscriptionProductIos & IosPlatform);
 
 export type RequestSubscriptionProps =
   | RequestSubscriptionAndroidProps
   | RequestSubscriptionIosProps;
-
-enum TransactionReason {
-  PURCHASE = 'PURCHASE',
-  RENEWAL = 'RENEWAL',
-}
-
-export type SubscriptionPurchase = {
-  autoRenewingAndroid?: boolean;
-  originalTransactionDateIOS?: number;
-  originalTransactionIdentifierIOS?: string;
-  verificationResultIOS?: string;
-  transactionReasonIOS?: TransactionReason | string;
-} & ProductPurchase;
-
-export type Purchase = ProductPurchase | SubscriptionPurchase;
 
 export type PurchaseResult = {
   responseCode?: number;

@@ -1,3 +1,5 @@
+import {PurchaseBase, ProductBase} from '../ExpoIap.types';
+
 type SubscriptionIosPeriod = 'DAY' | 'WEEK' | 'MONTH' | 'YEAR' | '';
 type PaymentMode = '' | 'FREETRIAL' | 'PAYASYOUGO' | 'PAYUPFRONT';
 
@@ -18,22 +20,18 @@ type SubscriptionInfo = {
   subscriptionPeriod: SubscriptionIosPeriod;
 };
 
-export type ProductIos = {
-  currency: string;
-  description: string;
+export type ProductIos = ProductBase & {
   displayName: string;
   displayPrice: string;
-  id: string;
-  type: 'autoRenewable' | 'consumable' | 'nonConsumable' | 'nonRenewable';
+  type: 'autoRenewable' | 'consumable' | 'nonConsumable' | 'nonRenewable'; // Maps to 'type' in base Product
   isFamilyShareable: boolean;
   jsonRepresentation: string;
-  price: number;
   subscription: SubscriptionInfo;
   introductoryPriceNumberOfPeriodsIOS?: string;
   introductoryPriceSubscriptionPeriodIOS?: SubscriptionIosPeriod;
 };
 
-type Discount = {
+export type Discount = {
   identifier: string;
   type: string;
   numberOfPeriods: string;
@@ -59,22 +57,18 @@ export type PaymentDiscount = {
    * A string used to uniquely identify a discount offer for a product.
    */
   identifier: string;
-
   /**
    * A string that identifies the key used to generate the signature.
    */
   keyIdentifier: string;
-
   /**
    * A universally unique ID (UUID) value that you define.
    */
   nonce: string;
-
   /**
    * A UTF-8 string representing the properties of a specific discount offer, cryptographically signed.
    */
   signature: string;
-
   /**
    * The date and time of the signature's creation in milliseconds, formatted in Unix epoch time.
    */
@@ -83,7 +77,6 @@ export type PaymentDiscount = {
 
 export type RequestPurchaseIosProps = {
   sku: string;
-  andDangerouslyFinishTransactionAutomaticallyIOS?: boolean;
   /**
    * UUID representing user account
    */
@@ -93,34 +86,6 @@ export type RequestPurchaseIosProps = {
 };
 
 export type RequestSubscriptionIosProps = RequestPurchaseIosProps;
-
-export type TransactionSk2 = {
-  appAccountToken: string;
-  appBundleID: string;
-  debugDescription: string;
-  deviceVerification: string;
-  deviceVerificationNonce: string;
-  expirationDate: number;
-  environment?: 'Production' | 'Sandbox' | 'Xcode'; // Could be undefined in some cases on iOS 15, but it's stable since iOS 16
-  id: number;
-  isUpgraded: boolean;
-  jsonRepresentation: string;
-  offerID: string;
-  offerType: string;
-  originalID: string;
-  originalPurchaseDate: number;
-  ownershipType: string;
-  productID: string;
-  productType: string;
-  purchaseDate: number;
-  purchasedQuantity: number;
-  revocationDate: number;
-  revocationReason: string;
-  signedDate: number;
-  subscriptionGroupID: number;
-  webOrderLineItemID: number;
-  verificationResult?: string;
-};
 
 type SubscriptionStatus =
   | 'expired'
@@ -138,4 +103,35 @@ type RenewalInfo = {
 export type ProductStatusIos = {
   state: SubscriptionStatus;
   renewalInfo?: RenewalInfo;
+};
+
+export type ProductPurchaseIos = PurchaseBase & {
+  // iOS basic fields
+  quantityIos?: number;
+  originalTransactionDateIos?: number;
+  originalTransactionIdentifierIos?: string;
+  verificationResultIos?: string;
+  appAccountToken?: string;
+  // iOS additional fields from StoreKit 2
+  expirationDateIos?: number;
+  webOrderLineItemIdIos?: number;
+  environmentIos?: string;
+  storefrontCountryCodeIos?: string;
+  appBundleIdIos?: string;
+  productTypeIos?: string;
+  subscriptionGroupIdIos?: string;
+  isUpgradedIos?: boolean;
+  ownershipTypeIos?: string;
+  reasonIos?: string;
+  reasonStringRepresentationIos?: string;
+  transactionReasonIos?: 'PURCHASE' | 'RENEWAL' | string;
+  revocationDateIos?: number;
+  revocationReasonIos?: string;
+  offerIos?: {
+    id: string;
+    type: string;
+    paymentMode: string;
+  };
+  priceIos?: number;
+  currencyIos?: string;
 };
