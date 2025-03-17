@@ -1,14 +1,11 @@
 {
   "name": "expo-iap",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "In App Purchase module in Expo",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
-    "build:compile": "expo-module tsc",
-    "build:copy": "mkdir -p build && rsync -a --include '*/' --include '*.ts' --exclude '*' src/ build/",
-    "build": "npm run build:compile && npm run build:copy",
-    "build:watch": "expo-module build",
+    "build": "expo-module build",
     "clean": "expo-module clean",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx src",
     "lint:eslint": "eslint --fix '**/*.{ts,tsx}'",
