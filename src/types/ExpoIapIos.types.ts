@@ -76,10 +76,10 @@ export type PaymentDiscount = {
 
 export type RequestPurchaseIosProps = {
   sku: string;
-  autoFinish?: boolean;
+  andDangerouslyFinishTransactionAutomaticallyIOS?: boolean;
   /**
    * UUID representing user account
-  */
+   */
   appAccountToken?: string;
   quantity?: number;
   withOffer?: PaymentDiscount;

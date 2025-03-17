@@ -308,7 +308,7 @@ public class ExpoIapModule: Module {
             return purchasedItems.map { serializeTransaction($0) }
         }
 
-        AsyncFunction("buyProduct") { (sku: String, autoFinish: Bool, appAccountToken: String?, quantity: Int, discountOffer: [String: String]?) -> [String: Any?]? in
+        AsyncFunction("buyProduct") { (sku: String, andDangerouslyFinishTransactionAutomatically: Bool, appAccountToken: String?, quantity: Int, discountOffer: [String: String]?) -> [String: Any?]? in
             guard let productStore = self.productStore else {
                 throw NSError(domain: "ExpoIapModule", code: 1, userInfo: [NSLocalizedDescriptionKey: "Connection not initialized"])
             }
@@ -345,7 +345,7 @@ public class ExpoIapModule: Module {
                     switch result {
                     case .success(let verification):
                         let transaction = try self.checkVerified(verification)
-                        if autoFinish {
+                        if andDangerouslyFinishTransactionAutomatically {
                             await transaction.finish()
                             return nil
                         } else {
