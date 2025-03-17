@@ -9,7 +9,7 @@ import {
   getPurchaseHistory,
   getSubscriptions,
 } from './';
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useEffect, useState, useRef} from 'react';
 import {
   Product,
   ProductPurchase,
@@ -21,6 +21,7 @@ import {
 } from './ExpoIap.types';
 import {TransactionEvent} from './modules/ios';
 import {Subscription} from 'expo-modules-core';
+import {Platform} from 'react-native';
 
 type IAP_STATUS = {
   connected: boolean;
@@ -46,10 +47,6 @@ type IAP_STATUS = {
   getSubscriptions: (skus: string[]) => Promise<void>;
 };
 
-let purchaseUpdateSubscription: Subscription;
-let purchaseErrorSubscription: Subscription;
-let promotedProductsSubscription: Subscription;
-
 export function useIAP(): IAP_STATUS {
   const [connected, setConnected] = useState<boolean>(false);
   const [products, setProducts] = useState<Product[]>([]);
@@ -66,6 +63,13 @@ export function useIAP(): IAP_STATUS {
   const [currentPurchase, setCurrentPurchase] = useState<ProductPurchase>();
   const [currentPurchaseError, setCurrentPurchaseError] =
     useState<PurchaseError>();
+
+  // 구독을 훅 인스턴스별로 관리하기 위한 ref
+  const subscriptionsRef = useRef<{
+    purchaseUpdate?: Subscription;
+    purchaseError?: Subscription;
+    promotedProductsIos?: Subscription;
+  }>({});
 
   const requestProducts = useCallback(async (skus: string[]): Promise<void> => {
     setProducts(await getProducts(skus));
@@ -108,61 +112,55 @@ export function useIAP(): IAP_STATUS {
         if (purchase.id === currentPurchase?.id) {
           setCurrentPurchase(undefined);
         }
-
         if (purchase.id === currentPurchaseError?.productId) {
-          // Note that PurchaseError still uses productId
           setCurrentPurchaseError(undefined);
         }
       }
     },
-    [
-      currentPurchase?.id,
-      currentPurchaseError?.productId,
-      setCurrentPurchase,
-      setCurrentPurchaseError,
-    ],
+    [currentPurchase?.id, currentPurchaseError?.productId],
   );
 
   const initIapWithSubscriptions = useCallback(async (): Promise<void> => {
     const result = await initConnection();
-
     setConnected(result);
 
     if (result) {
-      purchaseUpdateSubscription = purchaseUpdatedListener(
+      subscriptionsRef.current.purchaseUpdate = purchaseUpdatedListener(
         async (purchase: Purchase | SubscriptionPurchase) => {
           setCurrentPurchaseError(undefined);
           setCurrentPurchase(purchase);
         },
       );
 
-      purchaseErrorSubscription = purchaseErrorListener(
+      subscriptionsRef.current.purchaseError = purchaseErrorListener(
         (error: PurchaseError) => {
           setCurrentPurchase(undefined);
           setCurrentPurchaseError(error);
         },
       );
 
-      promotedProductsSubscription = transactionUpdatedIos(
-        (event: TransactionEvent) => {
-          setPromotedProductsIOS((prevProducts) =>
-            event.transaction
-              ? [...prevProducts, event.transaction]
-              : prevProducts,
-          );
-        },
-      );
+      if (Platform.OS === 'ios') {
+        subscriptionsRef.current.promotedProductsIos = transactionUpdatedIos(
+          (event: TransactionEvent) => {
+            setPromotedProductsIOS((prevProducts) =>
+              event.transaction
+                ? [...prevProducts, event.transaction]
+                : prevProducts,
+            );
+          },
+        );
+      }
     }
   }, []);
 
   useEffect(() => {
     initIapWithSubscriptions();
+    const currentSubscriptions = subscriptionsRef.current;
 
-    return (): void => {
-      if (purchaseUpdateSubscription) purchaseUpdateSubscription.remove();
-      if (purchaseErrorSubscription) purchaseErrorSubscription.remove();
-      if (promotedProductsSubscription) promotedProductsSubscription.remove();
-
+    return () => {
+      currentSubscriptions.purchaseUpdate?.remove();
+      currentSubscriptions.purchaseError?.remove();
+      currentSubscriptions.promotedProductsIos?.remove();
       endConnection();
       setConnected(false);
     };
