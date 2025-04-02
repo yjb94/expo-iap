@@ -188,7 +188,7 @@ public class ExpoIapModule: Module {
             self.removeTransactionObserver()
         }
 
-        Function("initConnection") {
+        Function("initConnection") { () -> Bool in
             self.productStore = ProductStore()
             return AppStore.canMakePayments
         }
@@ -625,7 +625,7 @@ public class ExpoIapModule: Module {
             #endif
         }
 
-        Function("disable") {
+        Function("disable") { () -> Bool in
             self.removeTransactionObserver()
             return true
         }
