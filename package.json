@@ -1,6 +1,6 @@
 {
   "name": "expo-iap",
-  "version": "2.2.9",
+  "version": "2.2.10",
   "description": "In App Purchase module in Expo",
   "main": "build/index.js",
   "types": "build/index.d.ts",
