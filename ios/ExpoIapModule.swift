@@ -321,7 +321,7 @@ public class ExpoIapModule: Module {
                         let signature = discountOffer?["signature"],
                         let timestamp = discountOffer?["timestamp"],
                         let uuidNonce = UUID(uuidString: nonce),
-                        let signatureData = signature.data(using: .utf8),
+                        let signatureData = Data(base64Encoded: signature),
                         let timestampInt = Int(timestamp)
                     {
                         options.insert(
