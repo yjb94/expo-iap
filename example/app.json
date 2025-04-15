@@ -30,7 +30,8 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "../app.plugin.js"
+      "../app.plugin.js",
+      "expo-build-properties"
     ],
     "experiments": {
       "typedRoutes": true
