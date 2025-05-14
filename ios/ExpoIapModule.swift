@@ -232,12 +232,12 @@ public class ExpoIapModule: Module {
 
         AsyncFunction("getAvailableItems") {
             (alsoPublishToEventListener: Bool, onlyIncludeActiveItems: Bool) -> [[String: Any?]?] in
-            var purchasedItems: [Transaction] = []
+            var purchasedItemsSerialized: [[String: Any?]] = []
 
-            func addTransaction(transaction: Transaction) {
-                purchasedItems.append(transaction)
+            func addTransaction(transaction: Transaction, jwsRepresentationIos: String? = nil) {
+                purchasedItemsSerialized.append(serializeTransaction(transaction, jwsRepresentationIos: jwsRepresentationIos))
                 if alsoPublishToEventListener {
-                    self.sendEvent(IapEvent.PurchaseUpdated, serializeTransaction(transaction))
+                    self.sendEvent(IapEvent.PurchaseUpdated, serializeTransaction(transaction, jwsRepresentationIos: jwsRepresentationIos))
                 }
             }
 
@@ -247,13 +247,13 @@ public class ExpoIapModule: Module {
                 }
             }
 
-            for await result in onlyIncludeActiveItems
+            for await verification in onlyIncludeActiveItems
                 ? Transaction.currentEntitlements : Transaction.all
             {
                 do {
-                    let transaction = try self.checkVerified(result)
+                    let transaction = try self.checkVerified(verification)
                     if !onlyIncludeActiveItems {
-                        addTransaction(transaction: transaction)
+                        addTransaction(transaction: transaction, jwsRepresentationIos: verification.jwsRepresentation)
                         continue
                     }
                     switch transaction.productType {
@@ -261,7 +261,7 @@ public class ExpoIapModule: Module {
                         if await self.productStore?.getProduct(productID: transaction.productID)
                             != nil
                         {
-                            addTransaction(transaction: transaction)
+                            addTransaction(transaction: transaction, jwsRepresentationIos: verification.jwsRepresentation)
                         }
                     case .nonRenewable:
                         if await self.productStore?.getProduct(productID: transaction.productID)
@@ -271,7 +271,7 @@ public class ExpoIapModule: Module {
                             let expirationDate = Calendar(identifier: .gregorian).date(
                                 byAdding: DateComponents(year: 1), to: transaction.purchaseDate)!
                             if currentDate < expirationDate {
-                                addTransaction(transaction: transaction)
+                                addTransaction(transaction: transaction, jwsRepresentationIos: verification.jwsRepresentation)
                             }
                         }
                     default:
@@ -298,7 +298,7 @@ public class ExpoIapModule: Module {
                 }
             }
 
-            return purchasedItems.map { serializeTransaction($0) }
+            return purchasedItemsSerialized
         }
 
         AsyncFunction("buyProduct") {
