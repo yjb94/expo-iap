@@ -9,6 +9,12 @@ func serializeDebug(_ s: String) -> String? {
     #endif
 }
 
+func logDebug(_ message: String) {
+    #if DEBUG
+        print("DEBUG - \(message)")
+    #endif
+}
+
 struct IapEvent {
     static let PurchaseUpdated = "purchase-updated"
     static let PurchaseError = "purchase-error"
@@ -71,7 +77,10 @@ func serializeTransaction(_ transaction: Transaction, jwsRepresentationIos: Stri
     ]
 
     if (jwsRepresentationIos != nil) {
+        logDebug("serializeTransaction adding jwsRepresentationIos with length: \(jwsRepresentationIos!.count)")
         purchaseMap["jwsRepresentationIos"] = jwsRepresentationIos
+    } else {
+        logDebug("serializeTransaction jwsRepresentationIos is nil")
     }
     
     if #available(iOS 16.0, *) {
@@ -237,15 +246,20 @@ public class ExpoIapModule: Module {
             var purchasedItemsSerialized: [[String: Any?]] = []
 
             func addTransaction(transaction: Transaction, jwsRepresentationIos: String? = nil) {
-                purchasedItemsSerialized.append(serializeTransaction(transaction, jwsRepresentationIos: jwsRepresentationIos))
-                if alsoPublishToEventListener {
-                    self.sendEvent(IapEvent.PurchaseUpdated, serializeTransaction(transaction, jwsRepresentationIos: jwsRepresentationIos))
+                // Debug: Log JWS representation
+                logDebug("getAvailableItems JWS: \(jwsRepresentationIos != nil ? "exists" : "nil")")
+                if let jws = jwsRepresentationIos {
+                    logDebug("getAvailableItems JWS length: \(jws.count)")
                 }
-            }
-
-            func addError(error: Error, errorDict: [String: String]) {
+                
+                let serialized = serializeTransaction(transaction, jwsRepresentationIos: jwsRepresentationIos)
+                purchasedItemsSerialized.append(serialized)
+                
+                // Debug: Check if jwsRepresentationIos is included in serialized result
+                logDebug("getAvailableItems serialized includes JWS: \(serialized["jwsRepresentationIos"] != nil)")
+                
                 if alsoPublishToEventListener {
-                    self.sendEvent(IapEvent.PurchaseError, errorDict)
+                    self.sendEvent(IapEvent.PurchaseUpdated, serialized)
                 }
             }
 
@@ -287,7 +301,9 @@ public class ExpoIapModule: Module {
                         "message": StoreError.failedVerification.localizedDescription,
                         "productId": "unknown",
                     ]
-                    addError(error: StoreError.failedVerification, errorDict: err)
+                    if alsoPublishToEventListener {
+                        self.sendEvent(IapEvent.PurchaseError, err)
+                    }
                 } catch {
                     let err = [
                         "responseCode": IapErrors.E_UNKNOWN.rawValue,
@@ -296,10 +312,11 @@ public class ExpoIapModule: Module {
                         "message": error.localizedDescription,
                         "productId": "unknown",
                     ]
-                    addError(error: error, errorDict: err)
+                    if alsoPublishToEventListener {
+                        self.sendEvent(IapEvent.PurchaseError, err)
+                    }
                 }
             }
-
             return purchasedItemsSerialized
         }
 
@@ -362,12 +379,25 @@ public class ExpoIapModule: Module {
                     switch result {
                     case .success(let verification):
                         let transaction = try self.checkVerified(verification)
+                        
+                        // Debug: Log JWS representation
+                        if let jwsRepresentation = verification.jwsRepresentation {
+                            logDebug("buyProduct JWS: exists")
+                            logDebug("buyProduct JWS length: \(jwsRepresentation.count)")
+                        } else {
+                            logDebug("buyProduct JWS: does not exist")
+                        }
+                        
                         if andDangerouslyFinishTransactionAutomatically {
                             await transaction.finish()
                             return nil
                         } else {
                             self.transactions[String(transaction.id)] = transaction
                             let serialized = serializeTransaction(transaction, jwsRepresentationIos: verification.jwsRepresentation)
+                            
+                            // Debug: Check if jwsRepresentationIos is included in serialized result
+                            logDebug("buyProduct serialized includes JWS: \(serialized["jwsRepresentationIos"] != nil)")
+                            
                             self.sendEvent(IapEvent.PurchaseUpdated, serialized)
                             return serialized
                         }
@@ -458,9 +488,7 @@ public class ExpoIapModule: Module {
                 } else {
                     throw NSError(
                         domain: "ExpoIapModule", code: 4,
-                        userInfo: [
-                            NSLocalizedDescriptionKey: "Can't find entitlement for sku \(sku)"
-                        ])
+                        userInfo: [NSLocalizedDescriptionKey: "Can't find entitlement for sku \(sku)"])
                 }
             } else {
                 throw NSError(
@@ -499,10 +527,7 @@ public class ExpoIapModule: Module {
                 } else {
                     throw NSError(
                         domain: "ExpoIapModule", code: 4,
-                        userInfo: [
-                            NSLocalizedDescriptionKey:
-                                "Can't find latest transaction for sku \(sku)"
-                        ])
+                        userInfo: [NSLocalizedDescriptionKey: "Can't find latest transaction for sku \(sku)"])
                 }
             } else {
                 throw NSError(
@@ -562,17 +587,13 @@ public class ExpoIapModule: Module {
                                 "Cannot find window scene or not available on macOS"
                         ])
                 }
-                
                 // Get all subscription products before showing the management UI
                 let subscriptionSkus = await self.getAllSubscriptionProductIds()
                 self.pollingSkus = Set(subscriptionSkus)
-                
                 // Show the management UI
                 try await AppStore.showManageSubscriptions(in: windowScene)
-                
                 // Start polling for status changes
                 self.pollForSubscriptionStatusChanges()
-                
                 return true
             #else
                 throw NSError(
@@ -649,7 +670,7 @@ public class ExpoIapModule: Module {
         AsyncFunction("getReceiptData") { () -> String? in
             return try self.getReceiptDataInternal()
         }
-        
+
         AsyncFunction("isTransactionVerified") { (sku: String) -> Bool in
             guard let productStore = self.productStore else {
                 throw NSError(
@@ -669,7 +690,7 @@ public class ExpoIapModule: Module {
             }
             return false
         }
-        
+
         AsyncFunction("getTransactionJws") { (sku: String) -> String? in
             guard let productStore = self.productStore else {
                 throw NSError(
@@ -686,7 +707,7 @@ public class ExpoIapModule: Module {
                     userInfo: [NSLocalizedDescriptionKey: "Can't find transaction for sku \(sku)"])
             }
         }
-        
+
         AsyncFunction("validateReceiptIos") { (sku: String) -> [String: Any] in
             guard let productStore = self.productStore else {
                 throw NSError(
@@ -721,7 +742,7 @@ public class ExpoIapModule: Module {
                     isValid = false
                 }
             }
-            
+
             return [
                 "isValid": isValid,
                 "receiptData": receiptData,
@@ -750,7 +771,7 @@ public class ExpoIapModule: Module {
                     let transaction = try self.checkVerified(result)
                     self.transactions[String(transaction.id)] = transaction
                     if self.hasListeners {
-                        let serialized = serializeTransaction(transaction)
+                        let serialized = serializeTransaction(transaction, jwsRepresentationIos: result.jwsRepresentation)
                         self.sendEvent(IapEvent.PurchaseUpdated, serialized)
                         self.sendEvent(IapEvent.TransactionIapUpdated, ["transaction": serialized])
                     }
@@ -808,7 +829,6 @@ public class ExpoIapModule: Module {
 
     private func pollForSubscriptionStatusChanges() {
         subscriptionPollingTask?.cancel()
-        
         subscriptionPollingTask = Task {
             try? await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
             
@@ -825,10 +845,9 @@ public class ExpoIapModule: Module {
                 }
                 previousStatuses[sku] = willAutoRenew
             }
-            
+
             for _ in 1...5 {
                 try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
-                
                 if Task.isCancelled {
                     return
                 }
@@ -837,7 +856,6 @@ public class ExpoIapModule: Module {
                     guard let product = await self.productStore?.getProduct(productID: sku),
                           let status = try? await product.subscription?.status.first,
                           let result = await product.latestTransaction else { continue }
-                    
                     // Try to verify the transaction
                     let transaction: Transaction
                     do {
@@ -856,7 +874,8 @@ public class ExpoIapModule: Module {
                     if let previousWillAutoRenew = previousStatuses[sku], 
                        previousWillAutoRenew != currentWillAutoRenew {
                         
-                        var purchaseMap = serializeTransaction(transaction)
+                        // Use the jwsRepresentation when serializing the transaction
+                        var purchaseMap = serializeTransaction(transaction, jwsRepresentationIos: result.jwsRepresentation)
                         
                         if case .verified(let renewalInfo) = status.renewalInfo {
                             if let renewalInfoDict = serializeRenewalInfo(.verified(renewalInfo)) {
@@ -866,12 +885,10 @@ public class ExpoIapModule: Module {
                         
                         self.sendEvent(IapEvent.PurchaseUpdated, purchaseMap)
                         self.sendEvent(IapEvent.TransactionIapUpdated, ["transaction": purchaseMap])
-                        
                         previousStatuses[sku] = currentWillAutoRenew
                     }
                 }
             }
-            
             self.pollingSkus.removeAll()
         }
     }
