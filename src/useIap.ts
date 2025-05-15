@@ -11,6 +11,8 @@ import {
   getSubscriptions,
   requestPurchase as requestPurchaseInternal,
   sync,
+  validateReceiptIos,
+  validateReceiptAndroid,
 } from './';
 import {useCallback, useEffect, useState, useRef} from 'react';
 import {
@@ -49,10 +51,21 @@ type UseIap = {
   getProducts: (skus: string[]) => Promise<void>;
   getSubscriptions: (skus: string[]) => Promise<void>;
   requestPurchase: typeof requestPurchaseInternal;
+  validateReceipt: (
+    sku: string,
+    androidOptions?: {
+      packageName: string;
+      productToken: string;
+      accessToken: string;
+      isSub?: boolean;
+    },
+  ) => Promise<any>;
 };
 
 export interface UseIAPOptions {
-  onPurchaseSuccess?: (purchase: ProductPurchase | SubscriptionPurchase) => void;
+  onPurchaseSuccess?: (
+    purchase: ProductPurchase | SubscriptionPurchase,
+  ) => void;
   onPurchaseError?: (error: PurchaseError) => void;
   onSyncError?: (error: Error) => void;
 }
@@ -85,6 +98,12 @@ export function useIAP(options?: UseIAPOptions): UseIap {
     purchaseError?: Subscription;
     promotedProductsIos?: Subscription;
   }>({});
+
+  const subscriptionsRefState = useRef<SubscriptionProduct[]>([]);
+
+  useEffect(() => {
+    subscriptionsRefState.current = subscriptions;
+  }, [subscriptions]);
 
   const clearCurrentPurchase = useCallback(() => {
     setCurrentPurchase(undefined);
@@ -140,14 +159,19 @@ export function useIAP(options?: UseIAPOptions): UseIap {
         }
       }
     },
-    [currentPurchase?.id, currentPurchaseError?.productId, clearCurrentPurchase, clearCurrentPurchaseError],
+    [
+      currentPurchase?.id,
+      currentPurchaseError?.productId,
+      clearCurrentPurchase,
+      clearCurrentPurchaseError,
+    ],
   );
 
   const requestPurchaseWithReset = useCallback(
     async (requestObj: Parameters<typeof requestPurchaseInternal>[0]) => {
       clearCurrentPurchase();
       clearCurrentPurchaseError();
-      
+
       try {
         return await requestPurchaseInternal(requestObj);
       } catch (error) {
@@ -157,28 +181,71 @@ export function useIAP(options?: UseIAPOptions): UseIap {
     [clearCurrentPurchase, clearCurrentPurchaseError],
   );
 
-  const refreshSubscriptionStatus = useCallback(async (productId: string) => {
-    try {
+  const refreshSubscriptionStatus = useCallback(
+    async (productId: string) => {
+      try {
+        if (Platform.OS === 'ios') {
+          await sync().catch((error) => {
+            // Pass the error to the developer's handler if provided
+            if (optionsRef.current?.onSyncError) {
+              optionsRef.current.onSyncError(error);
+            } else {
+              // Fallback to original behavior
+              console.warn(
+                'Sync error occurred. This might require user password:',
+                error,
+              );
+            }
+          });
+        }
+
+        if (subscriptionsRefState.current.some((sub) => sub.id === productId)) {
+          await getSubscriptionsInternal([productId]);
+          await getAvailablePurchasesInternal();
+        }
+      } catch (error) {
+        console.warn('Failed to refresh subscription status:', error);
+      }
+    },
+    [getAvailablePurchasesInternal, getSubscriptionsInternal],
+  );
+
+  const validateReceipt = useCallback(
+    async (
+      sku: string,
+      androidOptions?: {
+        packageName: string;
+        productToken: string;
+        accessToken: string;
+        isSub?: boolean;
+      },
+    ) => {
       if (Platform.OS === 'ios') {
-        await sync().catch((error) => {
-          // Pass the error to the developer's handler if provided
-          if (optionsRef.current?.onSyncError) {
-            optionsRef.current.onSyncError(error);
-          } else {
-            // Fallback to original behavior
-            console.warn('Sync error occurred. This might require user password:', error);
-          }
+        return await validateReceiptIos(sku);
+      } else if (Platform.OS === 'android') {
+        if (
+          !androidOptions ||
+          !androidOptions.packageName ||
+          !androidOptions.productToken ||
+          !androidOptions.accessToken
+        ) {
+          throw new Error(
+            'Android validation requires packageName, productToken, and accessToken',
+          );
+        }
+        return await validateReceiptAndroid({
+          packageName: androidOptions.packageName,
+          productId: sku,
+          productToken: androidOptions.productToken,
+          accessToken: androidOptions.accessToken,
+          isSub: androidOptions.isSub,
         });
+      } else {
+        throw new Error('Platform not supported');
       }
-      
-      if (subscriptions.some(sub => sub.id === productId)) {
-        await getSubscriptionsInternal([productId]);
-        await getAvailablePurchasesInternal();
-      }
-    } catch (error) {
-      console.warn('Failed to refresh subscription status:', error);
-    }
-  }, [getSubscriptionsInternal, getAvailablePurchasesInternal, subscriptions]);
+    },
+    [],
+  );
 
   const initIapWithSubscriptions = useCallback(async (): Promise<void> => {
     const result = await initConnection();
@@ -214,14 +281,14 @@ export function useIAP(options?: UseIAPOptions): UseIap {
       if (Platform.OS === 'ios') {
         subscriptionsRef.current.promotedProductsIos = transactionUpdatedIos(
           async (event: TransactionEvent) => {
-            if (event.transaction) {
-              setPromotedProductsIOS((prevProducts) => 
-                [...prevProducts, event.transaction!]
-              );
-              
-              if ('expirationDateIos' in event.transaction) {
-                await refreshSubscriptionStatus(event.transaction.id);
-              }
+            setPromotedProductsIOS((prevProducts) =>
+              event.transaction
+                ? [...prevProducts, event.transaction]
+                : prevProducts,
+            );
+
+            if (event.transaction && 'expirationDateIos' in event.transaction) {
+              await refreshSubscriptionStatus(event.transaction.id);
             }
           },
         );
@@ -259,5 +326,6 @@ export function useIAP(options?: UseIAPOptions): UseIap {
     getProducts: getProductsInternal,
     getSubscriptions: getSubscriptionsInternal,
     requestPurchase: requestPurchaseWithReset,
+    validateReceipt,
   };
 }

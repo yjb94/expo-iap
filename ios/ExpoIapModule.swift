@@ -645,6 +645,90 @@ public class ExpoIapModule: Module {
             self.removeTransactionObserver()
             return true
         }
+
+        AsyncFunction("getReceiptData") { () -> String? in
+            return try self.getReceiptDataInternal()
+        }
+        
+        AsyncFunction("isTransactionVerified") { (sku: String) -> Bool in
+            guard let productStore = self.productStore else {
+                throw NSError(
+                    domain: "ExpoIapModule", code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "Connection not initialized"])
+            }
+            
+            if let product = await productStore.getProduct(productID: sku),
+               let result = await product.latestTransaction {
+                do {
+                    // If this doesn't throw, the transaction is verified
+                    _ = try self.checkVerified(result)
+                    return true
+                } catch {
+                    return false
+                }
+            }
+            return false
+        }
+        
+        AsyncFunction("getTransactionJws") { (sku: String) -> String? in
+            guard let productStore = self.productStore else {
+                throw NSError(
+                    domain: "ExpoIapModule", code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "Connection not initialized"])
+            }
+            
+            if let product = await productStore.getProduct(productID: sku),
+               let result = await product.latestTransaction {
+                return result.jwsRepresentation
+            } else {
+                throw NSError(
+                    domain: "ExpoIapModule", code: 5,
+                    userInfo: [NSLocalizedDescriptionKey: "Can't find transaction for sku \(sku)"])
+            }
+        }
+        
+        AsyncFunction("validateReceiptIos") { (sku: String) -> [String: Any] in
+            guard let productStore = self.productStore else {
+                throw NSError(
+                    domain: "ExpoIapModule", code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "Connection not initialized"])
+            }
+            
+            // Get receipt data
+            var receiptData: String = ""
+            do {
+                receiptData = try self.getReceiptDataInternal()
+            } catch {
+                // Continue with validation even if receipt retrieval fails
+                // Error will be reflected by empty receipt data
+            }
+            
+            var isValid = false
+            var jwsRepresentation: String? = nil
+            var latestTransaction: [String: Any?]? = nil
+            
+            // Get JWS representation and verify transaction
+            if let product = await productStore.getProduct(productID: sku),
+               let result = await product.latestTransaction {
+                jwsRepresentation = result.jwsRepresentation
+                
+                do {
+                    // If this doesn't throw, the transaction is verified
+                    let transaction = try self.checkVerified(result)
+                    isValid = true
+                    latestTransaction = serializeTransaction(transaction, jwsRepresentationIos: result.jwsRepresentation)
+                } catch {
+                    isValid = false
+                }
+            }
+            
+            return [
+                "isValid": isValid,
+                "receiptData": receiptData,
+                "jwsRepresentation": jwsRepresentation ?? "",
+                "latestTransaction": latestTransaction as Any
+            ]
+        }
     }
 
     private func addTransactionObserver() {
@@ -728,14 +812,18 @@ public class ExpoIapModule: Module {
         subscriptionPollingTask = Task {
             try? await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
             
-            var previousStatuses: [String: Product.SubscriptionInfo.RenewalState] = [:]
+            var previousStatuses: [String: Bool] = [:] // Track auto-renewal state with Bool
             
             for sku in self.pollingSkus {
                 guard let product = await self.productStore?.getProduct(productID: sku),
                       let status = try? await product.subscription?.status.first else { continue }
                 
-                previousStatuses[sku] = status.renewalInfo.verified?.willAutoRenew == true ? 
-                    .willRenew : .willNotRenew
+                // Track willAutoRenew as a bool value
+                var willAutoRenew = false
+                if case .verified(let info) = status.renewalInfo {
+                    willAutoRenew = info.willAutoRenew
+                }
+                previousStatuses[sku] = willAutoRenew
             }
             
             for _ in 1...5 {
@@ -748,18 +836,29 @@ public class ExpoIapModule: Module {
                 for sku in self.pollingSkus {
                     guard let product = await self.productStore?.getProduct(productID: sku),
                           let status = try? await product.subscription?.status.first,
-                          let transaction = await product.latestTransaction?.verified else { continue }
+                          let result = await product.latestTransaction else { continue }
                     
-                    let currentRenewalState = status.renewalInfo.verified?.willAutoRenew == true ? 
-                        Product.SubscriptionInfo.RenewalState.willRenew : 
-                        Product.SubscriptionInfo.RenewalState.willNotRenew
+                    // Try to verify the transaction
+                    let transaction: Transaction
+                    do {
+                        transaction = try self.checkVerified(result)
+                    } catch {
+                        continue // Skip if verification fails
+                    }
                     
-                    if let previousState = previousStatuses[sku], 
-                       previousState != currentRenewalState {
+                    // Track current auto-renewal state
+                    var currentWillAutoRenew = false
+                    if case .verified(let info) = status.renewalInfo {
+                        currentWillAutoRenew = info.willAutoRenew
+                    }
+                    
+                    // Compare with previous state
+                    if let previousWillAutoRenew = previousStatuses[sku], 
+                       previousWillAutoRenew != currentWillAutoRenew {
                         
                         var purchaseMap = serializeTransaction(transaction)
                         
-                        if let renewalInfo = status.renewalInfo.verified {
+                        if case .verified(let renewalInfo) = status.renewalInfo {
                             if let renewalInfoDict = serializeRenewalInfo(.verified(renewalInfo)) {
                                 purchaseMap["renewalInfo"] = renewalInfoDict
                             }
@@ -768,12 +867,33 @@ public class ExpoIapModule: Module {
                         self.sendEvent(IapEvent.PurchaseUpdated, purchaseMap)
                         self.sendEvent(IapEvent.TransactionIapUpdated, ["transaction": purchaseMap])
                         
-                        previousStatuses[sku] = currentRenewalState
+                        previousStatuses[sku] = currentWillAutoRenew
                     }
                 }
             }
             
             self.pollingSkus.removeAll()
+        }
+    }
+    
+    private func getReceiptDataInternal() throws -> String {
+        if let appStoreReceiptURL = Bundle.main.appStoreReceiptURL,
+           FileManager.default.fileExists(atPath: appStoreReceiptURL.path) {
+            do {
+                let receiptData = try Data(contentsOf: appStoreReceiptURL, options: .alwaysMapped)
+                return receiptData.base64EncodedString(options: [])
+            } catch {
+                throw NSError(
+                    domain: "ExpoIapModule", code: 13,
+                    userInfo: [
+                        NSLocalizedDescriptionKey:
+                            "Error reading receipt data: \(error.localizedDescription)"
+                    ])
+            }
+        } else {
+            throw NSError(
+                domain: "ExpoIapModule", code: 14,
+                userInfo: [NSLocalizedDescriptionKey: "App Store receipt not found"])
         }
     }
 }
