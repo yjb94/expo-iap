@@ -36,10 +36,10 @@ export const deepLinkToSubscriptionsAndroid = async ({
  * Use server side validation instead for your production builds
  * @param {string} packageName package name of your app.
  * @param {string} productId product id for your in app product.
- * @param {string} productToken token for your purchase.
- * @param {string} accessToken accessToken from googleApis.
+ * @param {string} productToken token for your purchase (called 'token' in the API documentation).
+ * @param {string} accessToken OAuth access token with androidpublisher scope. Required for authentication.
  * @param {boolean} isSub whether this is subscription or inapp. `true` for subscription.
- * @returns {Promise<object>}
+ * @returns {Promise<ReceiptAndroid>}
  */
 export const validateReceiptAndroid = async ({
   packageName,
@@ -59,12 +59,13 @@ export const validateReceiptAndroid = async ({
   const url =
     'https://androidpublisher.googleapis.com/androidpublisher/v3/applications' +
     `/${packageName}/purchases/${type}/${productId}` +
-    `/tokens/${productToken}?access_token=${accessToken}`;
+    `/tokens/${productToken}`;
 
   const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
     },
   });
 
