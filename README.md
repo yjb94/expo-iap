@@ -10,10 +10,9 @@ The `expo-iap` module has been migrated from [react-native-iap](https://github.c
 
 # API documentation
 
-- [Documentation for the main branch](https://github.com/expo/expo/blob/main/docs/pages/versions/unversioned/sdk/iap.md)
-- [Documentation for the latest stable release](https://docs.expo.dev/versions/latest/sdk/iap/)
+- [Documentation](./iap.md)
 
-> The updated documentation hasn’t been published to Expo yet. I’d love for you to take a look at [iap.md](./iap.md) and share your thoughts—any feedback would be greatly appreciated!
+> Sharing your thoughts—any feedback would be greatly appreciated!
 
 ## Sponsors
 
