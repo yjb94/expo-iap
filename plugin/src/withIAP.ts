@@ -83,7 +83,6 @@ const withIAPAndroid: ConfigPlugin = (config) => {
 
 const withIAP: ConfigPlugin = (config, _props) => {
   try {
-    console.log('🛠️ Applying expo-iap config plugin...');
     return withIAPAndroid(config);
   } catch (error) {
     WarningAggregator.addWarningAndroid(
