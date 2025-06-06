@@ -73,8 +73,17 @@ export const getProducts = async (skus: string[]): Promise<Product[]> => {
 
   return Platform.select({
     ios: async () => {
-      const items = await ExpoIapModule.getItems(skus);
-      return items.filter((item: unknown) => isProductIos<Product>(item));
+      const rawItems = await ExpoIapModule.getItems(skus);
+      return rawItems.filter((item: unknown) => {
+        if (!isProductIos(item)) return false;
+        return (
+          typeof item === 'object' &&
+          item !== null &&
+          'id' in item &&
+          typeof item.id === 'string' &&
+          skus.includes(item.id)
+        );
+      }) as Product[];
     },
     android: async () => {
       const products = await ExpoIapModule.getItemsByType('inapp', skus);
@@ -145,8 +154,9 @@ export const getPurchaseHistory = ({
       },
       android: async () => {
         const products = await ExpoIapModule.getPurchaseHistoryByType('inapp');
-        const subscriptions =
-          await ExpoIapModule.getPurchaseHistoryByType('subs');
+        const subscriptions = await ExpoIapModule.getPurchaseHistoryByType(
+          'subs',
+        );
         return products.concat(subscriptions);
       },
     }) || (() => Promise.resolve([]))
@@ -168,8 +178,9 @@ export const getAvailablePurchases = ({
         ),
       android: async () => {
         const products = await ExpoIapModule.getAvailableItemsByType('inapp');
-        const subscriptions =
-          await ExpoIapModule.getAvailableItemsByType('subs');
+        const subscriptions = await ExpoIapModule.getAvailableItemsByType(
+          'subs',
+        );
         return products.concat(subscriptions);
       },
     }) || (() => Promise.resolve([]))
