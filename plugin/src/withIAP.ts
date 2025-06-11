@@ -1,12 +1,15 @@
 import {
+  ConfigPlugin,
+  createRunOncePlugin,
   WarningAggregator,
   withAndroidManifest,
   withAppBuildGradle,
-  ConfigPlugin,
-  createRunOncePlugin,
 } from 'expo/config-plugins';
 
 const pkg = require('../../package.json');
+
+// Global flag to prevent duplicate logs
+let hasLoggedPluginExecution = false;
 
 const addLineToGradle = (
   content: string,
@@ -33,11 +36,21 @@ const modifyAppBuildGradle = (gradle: string): string => {
   // Add billing library dependencies to app-level build.gradle
   const billingDep = `    implementation "com.android.billingclient:billing-ktx:7.0.0"`;
   const gmsDep = `    implementation "com.google.android.gms:play-services-base:18.1.0"`;
+
+  let hasAddedDependency = false;
+
   if (!modified.includes(billingDep)) {
     modified = addLineToGradle(modified, /dependencies\s*{/, billingDep);
+    hasAddedDependency = true;
   }
   if (!modified.includes(gmsDep)) {
     modified = addLineToGradle(modified, /dependencies\s*{/, gmsDep, 1);
+    hasAddedDependency = true;
+  }
+
+  // Log only once and only if we actually added dependencies
+  if (hasAddedDependency && !hasLoggedPluginExecution) {
+    console.log('🛠️ expo-iap: Added billing dependencies to build.gradle');
   }
 
   return modified;
@@ -66,13 +79,17 @@ const withIAPAndroid: ConfigPlugin = (config) => {
     );
     if (!alreadyExists) {
       permissions.push(billingPerm);
-      console.log(
-        '✅ Added com.android.vending.BILLING to AndroidManifest.xml',
-      );
+      if (!hasLoggedPluginExecution) {
+        console.log(
+          '✅ Added com.android.vending.BILLING to AndroidManifest.xml',
+        );
+      }
     } else {
-      console.log(
-        'ℹ️ com.android.vending.BILLING already exists in AndroidManifest.xml',
-      );
+      if (!hasLoggedPluginExecution) {
+        console.log(
+          'ℹ️ com.android.vending.BILLING already exists in AndroidManifest.xml',
+        );
+      }
     }
 
     return config;
@@ -83,7 +100,10 @@ const withIAPAndroid: ConfigPlugin = (config) => {
 
 const withIAP: ConfigPlugin = (config, _props) => {
   try {
-    return withIAPAndroid(config);
+    const result = withIAPAndroid(config);
+    // Set flag after first execution to prevent duplicate logs
+    hasLoggedPluginExecution = true;
+    return result;
   } catch (error) {
     WarningAggregator.addWarningAndroid(
       'expo-iap',
