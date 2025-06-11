@@ -3,7 +3,6 @@ import {
   initConnection,
   purchaseErrorListener,
   purchaseUpdatedListener,
-  transactionUpdatedIos,
   getProducts,
   getAvailablePurchases,
   getPurchaseHistory,
@@ -24,8 +23,7 @@ import {
   SubscriptionProduct,
   SubscriptionPurchase,
 } from './ExpoIap.types';
-import {TransactionEvent} from './modules/ios';
-import {Subscription} from 'expo-modules-core';
+import {EventSubscription} from 'expo-modules-core';
 import {Platform} from 'react-native';
 
 type UseIap = {
@@ -91,14 +89,35 @@ export function useIAP(options?: UseIAPOptions): UseIap {
 
   const optionsRef = useRef<UseIAPOptions | undefined>(options);
 
+  // Helper function to merge arrays with duplicate checking
+  const mergeWithDuplicateCheck = useCallback(
+    <T>(
+      existingItems: T[],
+      newItems: T[],
+      getKey: (item: T) => string,
+    ): T[] => {
+      const merged = [...existingItems];
+      newItems.forEach((newItem) => {
+        const isDuplicate = merged.some(
+          (existingItem) => getKey(existingItem) === getKey(newItem),
+        );
+        if (!isDuplicate) {
+          merged.push(newItem);
+        }
+      });
+      return merged;
+    },
+    [],
+  );
+
   useEffect(() => {
     optionsRef.current = options;
   }, [options]);
 
   const subscriptionsRef = useRef<{
-    purchaseUpdate?: Subscription;
-    purchaseError?: Subscription;
-    promotedProductsIos?: Subscription;
+    purchaseUpdate?: EventSubscription;
+    purchaseError?: EventSubscription;
+    promotedProductsIos?: EventSubscription;
   }>({});
 
   const subscriptionsRefState = useRef<SubscriptionProduct[]>([]);
@@ -117,16 +136,30 @@ export function useIAP(options?: UseIAPOptions): UseIap {
 
   const getProductsInternal = useCallback(
     async (skus: string[]): Promise<void> => {
-      setProducts(await getProducts(skus));
+      const newProducts = await getProducts(skus);
+      setProducts((prevProducts) =>
+        mergeWithDuplicateCheck(
+          prevProducts,
+          newProducts,
+          (product) => product.id,
+        ),
+      );
     },
-    [],
+    [mergeWithDuplicateCheck],
   );
 
   const getSubscriptionsInternal = useCallback(
     async (skus: string[]): Promise<void> => {
-      setSubscriptions(await getSubscriptions(skus));
+      const newSubscriptions = await getSubscriptions(skus);
+      setSubscriptions((prevSubscriptions) =>
+        mergeWithDuplicateCheck(
+          prevSubscriptions,
+          newSubscriptions,
+          (subscription) => subscription.id,
+        ),
+      );
     },
-    [],
+    [mergeWithDuplicateCheck],
   );
 
   const getAvailablePurchasesInternal = useCallback(async (): Promise<void> => {
@@ -283,22 +316,27 @@ export function useIAP(options?: UseIAPOptions): UseIap {
       );
 
       if (Platform.OS === 'ios') {
-        subscriptionsRef.current.promotedProductsIos = transactionUpdatedIos(
-          async (event: TransactionEvent) => {
+        // iOS promoted products are handled through regular purchase updates
+        subscriptionsRef.current.promotedProductsIos = purchaseUpdatedListener(
+          async (purchase: Purchase | SubscriptionPurchase) => {
+            // Add to promoted products if it's a promoted transaction (avoid duplicates)
             setPromotedProductsIOS((prevProducts) =>
-              event.transaction
-                ? [...prevProducts, event.transaction]
-                : prevProducts,
+              mergeWithDuplicateCheck(
+                prevProducts,
+                [purchase as ProductPurchase],
+                (product) => product.transactionId || product.id,
+              ),
             );
 
-            if (event.transaction && 'expirationDateIos' in event.transaction) {
-              await refreshSubscriptionStatus(event.transaction.id);
+            // Refresh subscription status if it's a subscription purchase
+            if ('expirationDateIos' in purchase) {
+              await refreshSubscriptionStatus(purchase.id);
             }
           },
         );
       }
     }
-  }, [refreshSubscriptionStatus]);
+  }, [refreshSubscriptionStatus, mergeWithDuplicateCheck]);
 
   useEffect(() => {
     initIapWithSubscriptions();
