@@ -209,9 +209,7 @@ public class ExpoIapModule: Module {
 
         AsyncFunction("getItems") { (skus: [String]) -> [[String: Any?]?] in
             guard let productStore = self.productStore else {
-                throw NSError(
-                    domain: "ExpoIapModule", code: 1,
-                    userInfo: [NSLocalizedDescriptionKey: "Connection not initialized"])
+                throw Exception(name: "ExpoIapModule", description: "Connection not initialized", code: "1")
             }
 
             do {
@@ -225,6 +223,9 @@ public class ExpoIapModule: Module {
                 return products.map { serializeProduct($0) }.compactMap { $0 }
             } catch {
                 print("Error fetching items: \(error)")
+                if error is Exception {
+                    throw error
+                }
                 throw error
             }
         }
@@ -325,9 +326,7 @@ public class ExpoIapModule: Module {
                 appAccountToken: String?, quantity: Int, discountOffer: [String: String]?
             ) -> [String: Any?]? in
             guard let productStore = self.productStore else {
-                throw NSError(
-                    domain: "ExpoIapModule", code: 1,
-                    userInfo: [NSLocalizedDescriptionKey: "Connection not initialized"])
+                throw Exception(name: "ExpoIapModule", description: "Connection not initialized", code: "1")
             }
 
             let product: Product? = await productStore.getProduct(productID: sku)
@@ -357,9 +356,7 @@ public class ExpoIapModule: Module {
                         options.insert(.appAccountToken(appAccountUUID))
                     }
                     guard let windowScene = await self.currentWindowScene() else {
-                        throw NSError(
-                            domain: "ExpoIapModule", code: 2,
-                            userInfo: [NSLocalizedDescriptionKey: "Could not find window scene"])
+                        throw Exception(name: "ExpoIapModule", description: "Could not find window scene", code: "2")
                     }
                     let result: Product.PurchaseResult
                     #if swift(>=5.9)
@@ -402,30 +399,20 @@ public class ExpoIapModule: Module {
                             return serialized
                         }
                     case .userCancelled:
-                        throw NSError(
-                            domain: "ExpoIapModule", code: 3,
-                            userInfo: [NSLocalizedDescriptionKey: "User cancelled the purchase"])
+                        throw Exception(name: "ExpoIapModule", description: "User cancelled the purchase", code: "3")
                     case .pending:
-                        throw NSError(
-                            domain: "ExpoIapModule", code: 4,
-                            userInfo: [NSLocalizedDescriptionKey: "The payment was deferred"])
+                        throw Exception(name: "ExpoIapModule", description: "The payment was deferred", code: "4")
                     @unknown default:
-                        throw NSError(
-                            domain: "ExpoIapModule", code: 5,
-                            userInfo: [NSLocalizedDescriptionKey: "Unknown purchase result"])
+                        throw Exception(name: "ExpoIapModule", description: "Unknown purchase result", code: "5")
                     }
                 } catch {
-                    throw NSError(
-                        domain: "ExpoIapModule", code: 6,
-                        userInfo: [
-                            NSLocalizedDescriptionKey:
-                                "Purchase failed: \(error.localizedDescription)"
-                        ])
+                    if error is Exception {
+                        throw error
+                    }
+                    throw Exception(name: "ExpoIapModule", description: "Purchase failed: \(error.localizedDescription)", code: "6")
                 }
             } else {
-                throw NSError(
-                    domain: "ExpoIapModule", code: 7,
-                    userInfo: [NSLocalizedDescriptionKey: "Invalid product ID"])
+                throw Exception(name: "ExpoIapModule", description: "Invalid product ID", code: "7")
             }
         }
 
@@ -435,9 +422,7 @@ public class ExpoIapModule: Module {
 
         AsyncFunction("subscriptionStatus") { (sku: String) -> [[String: Any?]?]? in
             guard let productStore = self.productStore else {
-                throw NSError(
-                    domain: "ExpoIapModule", code: 1,
-                    userInfo: [NSLocalizedDescriptionKey: "Connection not initialized"])
+                throw Exception(name: "ExpoIapModule", description: "Connection not initialized", code: "1")
             }
 
             do {
@@ -449,20 +434,16 @@ public class ExpoIapModule: Module {
                 }
                 return status.map { serializeSubscriptionStatus($0) }
             } catch {
-                throw NSError(
-                    domain: "ExpoIapModule", code: 2,
-                    userInfo: [
-                        NSLocalizedDescriptionKey:
-                            "Error getting subscription status: \(error.localizedDescription)"
-                    ])
+                if error is Exception {
+                    throw error
+                }
+                throw Exception(name: "ExpoIapModule", description: "Error getting subscription status: \(error.localizedDescription)", code: "2")
             }
         }
 
         AsyncFunction("currentEntitlement") { (sku: String) -> [String: Any?]? in
             guard let productStore = self.productStore else {
-                throw NSError(
-                    domain: "ExpoIapModule", code: 1,
-                    userInfo: [NSLocalizedDescriptionKey: "Connection not initialized"])
+                throw Exception(name: "ExpoIapModule", description: "Connection not initialized", code: "1")
             }
 
             if let product = await productStore.getProduct(productID: sku) {
@@ -471,37 +452,24 @@ public class ExpoIapModule: Module {
                         let transaction = try self.checkVerified(result)
                         return serializeTransaction(transaction)
                     } catch StoreError.failedVerification {
-                        throw NSError(
-                            domain: "ExpoIapModule", code: 2,
-                            userInfo: [
-                                NSLocalizedDescriptionKey:
-                                    "Failed to verify transaction for sku \(sku)"
-                            ])
+                        throw Exception(name: "ExpoIapModule", description: "Failed to verify transaction for sku \(sku)", code: "2")
                     } catch {
-                        throw NSError(
-                            domain: "ExpoIapModule", code: 3,
-                            userInfo: [
-                                NSLocalizedDescriptionKey:
-                                    "Error fetching entitlement for sku \(sku): \(error.localizedDescription)"
-                            ])
+                        if error is Exception {
+                            throw error
+                        }
+                        throw Exception(name: "ExpoIapModule", description: "Error fetching entitlement for sku \(sku): \(error.localizedDescription)", code: "3")
                     }
                 } else {
-                    throw NSError(
-                        domain: "ExpoIapModule", code: 4,
-                        userInfo: [NSLocalizedDescriptionKey: "Can't find entitlement for sku \(sku)"])
+                    throw Exception(name: "ExpoIapModule", description: "Can't find entitlement for sku \(sku)", code: "4")
                 }
             } else {
-                throw NSError(
-                    domain: "ExpoIapModule", code: 5,
-                    userInfo: [NSLocalizedDescriptionKey: "Can't find product for sku \(sku)"])
+                throw Exception(name: "ExpoIapModule", description: "Can't find product for sku \(sku)", code: "5")
             }
         }
 
         AsyncFunction("latestTransaction") { (sku: String) -> [String: Any?]? in
             guard let productStore = self.productStore else {
-                throw NSError(
-                    domain: "ExpoIapModule", code: 1,
-                    userInfo: [NSLocalizedDescriptionKey: "Connection not initialized"])
+                throw Exception(name: "ExpoIapModule", description: "Connection not initialized", code: "1")
             }
 
             if let product = await productStore.getProduct(productID: sku) {
@@ -510,29 +478,18 @@ public class ExpoIapModule: Module {
                         let transaction = try self.checkVerified(result)
                         return serializeTransaction(transaction)
                     } catch StoreError.failedVerification {
-                        throw NSError(
-                            domain: "ExpoIapModule", code: 2,
-                            userInfo: [
-                                NSLocalizedDescriptionKey:
-                                    "Failed to verify transaction for sku \(sku)"
-                            ])
+                        throw Exception(name: "ExpoIapModule", description: "Failed to verify transaction for sku \(sku)", code: "2")
                     } catch {
-                        throw NSError(
-                            domain: "ExpoIapModule", code: 3,
-                            userInfo: [
-                                NSLocalizedDescriptionKey:
-                                    "Error fetching latest transaction for sku \(sku): \(error.localizedDescription)"
-                            ])
+                        if error is Exception {
+                            throw error
+                        }
+                        throw Exception(name: "ExpoIapModule", description: "Error fetching latest transaction for sku \(sku): \(error.localizedDescription)", code: "3")
                     }
                 } else {
-                    throw NSError(
-                        domain: "ExpoIapModule", code: 4,
-                        userInfo: [NSLocalizedDescriptionKey: "Can't find latest transaction for sku \(sku)"])
+                    throw Exception(name: "ExpoIapModule", description: "Can't find latest transaction for sku \(sku)", code: "4")
                 }
             } else {
-                throw NSError(
-                    domain: "ExpoIapModule", code: 5,
-                    userInfo: [NSLocalizedDescriptionKey: "Can't find product for sku \(sku)"])
+                throw Exception(name: "ExpoIapModule", description: "Can't find product for sku \(sku)", code: "5")
             }
         }
 
@@ -542,9 +499,7 @@ public class ExpoIapModule: Module {
                 self.transactions.removeValue(forKey: transactionIdentifier)
                 return true
             } else {
-                throw NSError(
-                    domain: "ExpoIapModule", code: 8,
-                    userInfo: [NSLocalizedDescriptionKey: "Invalid transaction ID"])
+                throw Exception(name: "ExpoIapModule", description: "Invalid transaction ID", code: "8")
             }
         }
 
@@ -557,12 +512,10 @@ public class ExpoIapModule: Module {
                 try await AppStore.sync()
                 return true
             } catch {
-                throw NSError(
-                    domain: "ExpoIapModule", code: 9,
-                    userInfo: [
-                        NSLocalizedDescriptionKey:
-                            "Error synchronizing with the AppStore: \(error.localizedDescription)"
-                    ])
+                if error is Exception {
+                    throw error
+                }
+                throw Exception(name: "ExpoIapModule", description: "Error synchronizing with the AppStore: \(error.localizedDescription)", code: "9")
             }
         }
 
@@ -571,21 +524,14 @@ public class ExpoIapModule: Module {
                 SKPaymentQueue.default().presentCodeRedemptionSheet()
                 return true
             #else
-                throw NSError(
-                    domain: "ExpoIapModule", code: 10,
-                    userInfo: [NSLocalizedDescriptionKey: "This method is not available on tvOS"])
+                throw Exception(name: "ExpoIapModule", description: "This method is not available on tvOS", code: "10")
             #endif
         }
 
         AsyncFunction("showManageSubscriptions") { () -> Bool in
             #if !os(tvOS)
                 guard let windowScene = await self.currentWindowScene() else {
-                    throw NSError(
-                        domain: "ExpoIapModule", code: 11,
-                        userInfo: [
-                            NSLocalizedDescriptionKey:
-                                "Cannot find window scene or not available on macOS"
-                        ])
+                    throw Exception(name: "ExpoIapModule", description: "Cannot find window scene or not available on macOS", code: "11")
                 }
                 // Get all subscription products before showing the management UI
                 let subscriptionSkus = await self.getAllSubscriptionProductIds()
@@ -596,9 +542,7 @@ public class ExpoIapModule: Module {
                 self.pollForSubscriptionStatusChanges()
                 return true
             #else
-                throw NSError(
-                    domain: "ExpoIapModule", code: 12,
-                    userInfo: [NSLocalizedDescriptionKey: "This method is not available on tvOS"])
+                throw Exception(name: "ExpoIapModule", description: "This method is not available on tvOS", code: "12")
             #endif
         }
 
@@ -610,6 +554,9 @@ public class ExpoIapModule: Module {
                         await transaction.finish()
                         self.transactions.removeValue(forKey: String(transaction.id))
                     } catch {
+                        if error is Exception {
+                            throw error
+                        }
                         print("Failed to finish transaction")
                     }
                 }
@@ -621,44 +568,26 @@ public class ExpoIapModule: Module {
                 guard let product = await self.productStore?.getProduct(productID: sku),
                     let result = await product.latestTransaction
                 else {
-                    throw NSError(
-                        domain: "ExpoIapModule", code: 5,
-                        userInfo: [
-                            NSLocalizedDescriptionKey:
-                                "Can't find product or transaction for sku \(sku)"
-                        ])
+                    throw Exception(name: "ExpoIapModule", description: "Can't find product or transaction for sku \(sku)", code: "5")
                 }
 
                 do {
                     let transaction = try self.checkVerified(result)
                     guard let windowScene = await self.currentWindowScene() else {
-                        throw NSError(
-                            domain: "ExpoIapModule", code: 11,
-                            userInfo: [
-                                NSLocalizedDescriptionKey:
-                                    "Cannot find window scene or not available on macOS"
-                            ])
+                        throw Exception(name: "ExpoIapModule", description: "Cannot find window scene or not available on macOS", code: "11")
                     }
                     let refundStatus = try await transaction.beginRefundRequest(in: windowScene)
                     return serialize(refundStatus)
                 } catch StoreError.failedVerification {
-                    throw NSError(
-                        domain: "ExpoIapModule", code: 2,
-                        userInfo: [
-                            NSLocalizedDescriptionKey: "Failed to verify transaction for sku \(sku)"
-                        ])
+                    throw Exception(name: "ExpoIapModule", description: "Failed to verify transaction for sku \(sku)", code: "2")
                 } catch {
-                    throw NSError(
-                        domain: "ExpoIapModule", code: 3,
-                        userInfo: [
-                            NSLocalizedDescriptionKey:
-                                "Failed to refund purchase: \(error.localizedDescription)"
-                        ])
+                    if error is Exception {
+                        throw error
+                    }
+                    throw Exception(name: "ExpoIapModule", description: "Failed to refund purchase: \(error.localizedDescription)", code: "3")
                 }
             #else
-                throw NSError(
-                    domain: "ExpoIapModule", code: 12,
-                    userInfo: [NSLocalizedDescriptionKey: "This method is not available on tvOS"])
+                throw Exception(name: "ExpoIapModule", description: "This method is not available on tvOS", code: "12")
             #endif
         }
 
@@ -673,9 +602,7 @@ public class ExpoIapModule: Module {
 
         AsyncFunction("isTransactionVerified") { (sku: String) -> Bool in
             guard let productStore = self.productStore else {
-                throw NSError(
-                    domain: "ExpoIapModule", code: 1,
-                    userInfo: [NSLocalizedDescriptionKey: "Connection not initialized"])
+                throw Exception(name: "ExpoIapModule", description: "Connection not initialized", code: "1")
             }
             
             if let product = await productStore.getProduct(productID: sku),
@@ -693,26 +620,20 @@ public class ExpoIapModule: Module {
 
         AsyncFunction("getTransactionJws") { (sku: String) -> String? in
             guard let productStore = self.productStore else {
-                throw NSError(
-                    domain: "ExpoIapModule", code: 1,
-                    userInfo: [NSLocalizedDescriptionKey: "Connection not initialized"])
+                throw Exception(name: "ExpoIapModule", description: "Connection not initialized", code: "1")
             }
             
             if let product = await productStore.getProduct(productID: sku),
                let result = await product.latestTransaction {
                 return result.jwsRepresentation
             } else {
-                throw NSError(
-                    domain: "ExpoIapModule", code: 5,
-                    userInfo: [NSLocalizedDescriptionKey: "Can't find transaction for sku \(sku)"])
+                throw Exception(name: "ExpoIapModule", description: "Can't find transaction for sku \(sku)", code: "5")
             }
         }
 
         AsyncFunction("validateReceiptIos") { (sku: String) -> [String: Any] in
             guard let productStore = self.productStore else {
-                throw NSError(
-                    domain: "ExpoIapModule", code: 1,
-                    userInfo: [NSLocalizedDescriptionKey: "Connection not initialized"])
+                throw Exception(name: "ExpoIapModule", description: "Connection not initialized", code: "1")
             }
             
             // Get receipt data
@@ -897,17 +818,10 @@ public class ExpoIapModule: Module {
                 let receiptData = try Data(contentsOf: appStoreReceiptURL, options: .alwaysMapped)
                 return receiptData.base64EncodedString(options: [])
             } catch {
-                throw NSError(
-                    domain: "ExpoIapModule", code: 13,
-                    userInfo: [
-                        NSLocalizedDescriptionKey:
-                            "Error reading receipt data: \(error.localizedDescription)"
-                    ])
+                throw Exception(name: "ExpoIapModule", description: "Error reading receipt data: \(error.localizedDescription)", code: "13")
             }
         } else {
-            throw NSError(
-                domain: "ExpoIapModule", code: 14,
-                userInfo: [NSLocalizedDescriptionKey: "App Store receipt not found"])
+            throw Exception(name: "ExpoIapModule", description: "App Store receipt not found", code: "14")
         }
     }
 }
