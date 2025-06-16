@@ -26,6 +26,7 @@ import {
 import {isProductIos} from './modules/ios';
 import {isProductAndroid} from './modules/android';
 
+export * from './ExpoIap.types';
 export * from './modules/android';
 export * from './modules/ios';
 
