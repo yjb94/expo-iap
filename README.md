@@ -10,7 +10,57 @@ The `expo-iap` module has been migrated from [react-native-iap](https://github.c
 
 # API documentation
 
-- [Documentation](./iap.md)
+- [Documentation](./docs/IAP.md)
+- [Error Code Management](./docs/ERROR_CODES.md)
+
+## Error Handling
+
+expo-iap now provides a centralized error code system that works consistently across iOS and Android platforms. This system maps platform-specific error codes to standardized TypeScript enums.
+
+### Error Codes
+
+```typescript
+import { ErrorCode } from 'expo-iap';
+
+// Standardized error codes
+ErrorCode.E_USER_CANCELLED      // User cancelled the purchase
+ErrorCode.E_NETWORK_ERROR       // Network connectivity issue
+ErrorCode.E_ITEM_UNAVAILABLE    // Product not available
+ErrorCode.E_SERVICE_ERROR       // Store service error
+// ... and more
+```
+
+### Error Utilities
+
+```typescript
+import { 
+  mapPlatformError, 
+  isUserCancelledError, 
+  getUserFriendlyErrorMessage 
+} from 'expo-iap';
+
+// Handle purchase errors
+try {
+  await requestPurchase({ sku: 'product_id' });
+} catch (error) {
+  if (isUserCancelledError(error)) {
+    // User cancelled - don't show error
+    return;
+  }
+  
+  // Show user-friendly message
+  const message = getUserFriendlyErrorMessage(error);
+  Alert.alert('Purchase Failed', message);
+}
+```
+
+### Platform-Specific Error Mapping
+
+The system automatically maps platform codes:
+- **iOS**: Integer codes (0, 1, 2, etc.) → ErrorCode enum
+- **Android**: String codes ("E_USER_CANCELLED", etc.) → ErrorCode enum
+
+This ensures consistent error handling regardless of platform.
 
 > Sharing your thoughts—any feedback would be greatly appreciated!
 
