@@ -23,8 +23,8 @@ import {
   SubscriptionProduct,
   SubscriptionPurchase,
 } from './ExpoIap.types';
-import {EventSubscription} from 'expo-modules-core';
 import {Platform} from 'react-native';
+import {EventSubscription} from 'expo-modules-core';
 
 type UseIap = {
   connected: boolean;
