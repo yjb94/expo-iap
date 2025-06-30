@@ -1,8 +1,12 @@
-<img src="https://github.com/user-attachments/assets/f51a4b1b-b257-47bf-afe7-5ef8692f0594" />
+# Expo IAP
+
+| In app purchase module in [Expo](https://expo.dev)
+
+<div>
+  <img src="https://private-user-images.githubusercontent.com/27461460/460432423-3257a1e0-800b-441b-8522-94c35ce751d2.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTEyNjQ4NjEsIm5iZiI6MTc1MTI2NDU2MSwicGF0aCI6Ii8yNzQ2MTQ2MC80NjA0MzI0MjMtMzI1N2ExZTAtODAwYi00NDFiLTg1MjItOTRjMzVjZTc1MWQyLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA2MzAlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwNjMwVDA2MjI0MVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWVlMjFkNmViZmM5NzZmNzZlMmE2OWZjODU4NjczMTM2N2ZkYWVhY2MzMjc5YmIyMDlhNjRkNmEzNWNhMmI3MjUmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.BdhwkYigGHbjYLJblwUnHYNkX1-jDAWry0MqeLpfKrA" width="400" />
+</div>
 
 [![Version](http://img.shields.io/npm/v/expo-iap.svg?style=flat-square)](https://npmjs.org/package/expo-iap) [![Download](http://img.shields.io/npm/dm/expo-iap.svg?style=flat-square)](https://npmjs.org/package/expo-iap) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhyochan%2Fexpo-iap.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhyochan%2Fexpo-iap?ref=badge_shield&issueType=license)
-
-In App Purchase module in Expo
 
 # Notice
 
@@ -13,54 +17,13 @@ The `expo-iap` module has been migrated from [react-native-iap](https://github.c
 - [Documentation](./docs/IAP.md)
 - [Error Code Management](./docs/ERROR_CODES.md)
 
-## Error Handling
+## Installation
 
-expo-iap now provides a centralized error code system that works consistently across iOS and Android platforms. This system maps platform-specific error codes to standardized TypeScript enums.
-
-### Error Codes
-
-```typescript
-import { ErrorCode } from 'expo-iap';
-
-// Standardized error codes
-ErrorCode.E_USER_CANCELLED      // User cancelled the purchase
-ErrorCode.E_NETWORK_ERROR       // Network connectivity issue
-ErrorCode.E_ITEM_UNAVAILABLE    // Product not available
-ErrorCode.E_SERVICE_ERROR       // Store service error
-// ... and more
+```bash
+npx expo install expo-iap
 ```
 
-### Error Utilities
-
-```typescript
-import { 
-  mapPlatformError, 
-  isUserCancelledError, 
-  getUserFriendlyErrorMessage 
-} from 'expo-iap';
-
-// Handle purchase errors
-try {
-  await requestPurchase({ sku: 'product_id' });
-} catch (error) {
-  if (isUserCancelledError(error)) {
-    // User cancelled - don't show error
-    return;
-  }
-  
-  // Show user-friendly message
-  const message = getUserFriendlyErrorMessage(error);
-  Alert.alert('Purchase Failed', message);
-}
-```
-
-### Platform-Specific Error Mapping
-
-The system automatically maps platform codes:
-- **iOS**: Integer codes (0, 1, 2, etc.) → ErrorCode enum
-- **Android**: String codes ("E_USER_CANCELLED", etc.) → ErrorCode enum
-
-This ensures consistent error handling regardless of platform.
+For detailed usage examples and error handling, see the [documentation](./docs/IAP.md).
 
 > Sharing your thoughts—any feedback would be greatly appreciated!
 
