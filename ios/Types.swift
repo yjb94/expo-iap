@@ -14,6 +14,7 @@ public enum StoreError: Error {
 
 // Error codes for IAP operations - centralized error code management
 struct IapErrorCode {
+    // Constants for code usage - safe pattern without force unwrapping
     static let unknown = "E_UNKNOWN"
     static let serviceError = "E_SERVICE_ERROR"
     static let userCancelled = "E_USER_CANCELLED"
@@ -38,6 +39,39 @@ struct IapErrorCode {
     static let alreadyPrepared = "E_ALREADY_PREPARED"
     static let pending = "E_PENDING"
     static let connectionClosed = "E_CONNECTION_CLOSED"
+    
+    // Cached dictionary for Constants export - using constants as keys to avoid duplication
+    private static let _cachedDictionary: [String: String] = [
+        unknown: unknown,
+        serviceError: serviceError,
+        userCancelled: userCancelled,
+        userError: userError,
+        itemUnavailable: itemUnavailable,
+        remoteError: remoteError,
+        networkError: networkError,
+        receiptFailed: receiptFailed,
+        receiptFinishedFailed: receiptFinishedFailed,
+        notPrepared: notPrepared,
+        notEnded: notEnded,
+        alreadyOwned: alreadyOwned,
+        developerError: developerError,
+        purchaseError: purchaseError,
+        syncError: syncError,
+        deferredPayment: deferredPayment,
+        transactionValidationFailed: transactionValidationFailed,
+        billingResponseJsonParseError: billingResponseJsonParseError,
+        interrupted: interrupted,
+        iapNotAvailable: iapNotAvailable,
+        activityUnavailable: activityUnavailable,
+        alreadyPrepared: alreadyPrepared,
+        pending: pending,
+        connectionClosed: connectionClosed
+    ]
+    
+    // Return cached dictionary - no allocation on repeated calls
+    static func toDictionary() -> [String: String] {
+        return _cachedDictionary
+    }
 }
 
 // Based on https://stackoverflow.com/a/40135192/570612
