@@ -10,14 +10,14 @@
 
 ## 📚 Documentation
 
-**[📖 Visit our comprehensive documentation site →](https://hyochan.github.io/expo-iap/)**
+**[📖 Visit our comprehensive documentation site →](https://expo-iap.hyo.dev)**
 
-- [🚀 Quick Start Guide](https://hyochan.github.io/expo-iap/docs/intro)
-- [💽 Installation](https://hyochan.github.io/expo-iap/docs/installation)
-- [🍎 iOS Setup](https://hyochan.github.io/expo-iap/docs/getting-started/setup-ios)
-- [🤖 Android Setup](https://hyochan.github.io/expo-iap/docs/getting-started/setup-android)
-- [🎣 useIAP Hook API](https://hyochan.github.io/expo-iap/docs/api/use-iap)
-- [⚠️ Error Codes](https://hyochan.github.io/expo-iap/docs/api/error-codes)
+- [🚀 Quick Start Guide](https://expo-iap.hyo.dev/docs/intro)
+- [💽 Installation](https://expo-iap.hyo.dev/docs/installation)
+- [🍎 iOS Setup](https://expo-iap.hyo.dev/docs/getting-started/setup-ios)
+- [🤖 Android Setup](https://expo-iap.hyo.dev/docs/getting-started/setup-android)
+- [🎣 useIAP Hook API](https://expo-iap.hyo.dev/docs/api/use-iap)
+- [⚠️ Error Codes](https://expo-iap.hyo.dev/docs/api/error-codes)
 
 # Notice
 
@@ -29,7 +29,7 @@ The `expo-iap` module has been migrated from [react-native-iap](https://github.c
 npx expo install expo-iap
 ```
 
-For detailed usage examples and error handling, see the [documentation](https://hyochan.github.io/expo-iap/).
+For detailed usage examples and error handling, see the [documentation](https://expo-iap.hyo.dev).
 
 > Sharing your thoughts—any feedback would be greatly appreciated!
 

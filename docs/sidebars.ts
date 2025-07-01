@@ -64,6 +64,11 @@ const sidebars: SidebarsConfig = {
         'examples/subscription-manager',
       ],
     },
+    {
+      type: 'doc',
+      id: 'sponsors',
+      label: 'Sponsors',
+    },
   ],
 };
 
