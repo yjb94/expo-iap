@@ -7,37 +7,37 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
+      - '.github/workflows/docs.yml'
 
 jobs:
-  publish-documentation:
+  deploy:
+    name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          cache: 'yarn'
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 'latest'
 
-      - name: Install packages and build
+      - name: Install dependencies
         run: |
-          pushd ./docs
-          bun install --yarn
-          bun run build
-          popd
+          cd docs
+          bun install
 
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Build website
+        run: |
+          cd docs
+          bun run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         if: github.ref == 'refs/heads/main'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs/build
           publish_branch: gh-pages
           cname: expo-iap.hyo.dev
+          force_orphan: true
