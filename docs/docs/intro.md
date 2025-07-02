@@ -253,7 +253,7 @@ Expo IAP is built with a modern architecture that emphasizes:
 
 - [**API Reference**](./api/use-iap): Complete useIAP hook documentation
 - [**Basic Store Example**](./examples/basic-store): Simple product store implementation
-- [**Complete Store Example**](./examples/complete-store): Production-ready store with validation
+- [**Complete Store Example**](./examples/complete-impl): Production-ready store with validation
 
 ### � Guides
 

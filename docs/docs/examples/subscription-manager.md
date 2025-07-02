@@ -24,6 +24,7 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import {useIAP} from 'expo-iap';
 
@@ -234,7 +235,20 @@ export default function SubscriptionManager() {
 
     try {
       console.log('Requesting subscription:', productId);
-      await requestPurchase({sku: productId});
+
+      // Platform-specific subscription purchase requests
+      if (Platform.OS === 'ios') {
+        await requestPurchase({
+          request: {
+            sku: productId,
+            andDangerouslyFinishTransactionAutomaticallyIOS: false,
+          },
+        });
+      } /* Platform.OS === "android" */ else {
+        await requestPurchase({
+          request: {skus: [productId]},
+        });
+      }
     } catch (error) {
       console.error('Subscription request failed:', error);
       Alert.alert('Error', 'Failed to start subscription purchase');
@@ -574,6 +588,57 @@ const styles = StyleSheet.create({
 - Server-side subscription validation
 - Benefit granting system
 - Status synchronization
+
+## Platform Differences
+
+### Subscription Purchase Parameters
+
+**Important**: iOS and Android have different parameter structures for subscription purchases:
+
+**iOS Structure:**
+
+```tsx
+await requestPurchase({
+  request: {
+    sku: productId,
+    andDangerouslyFinishTransactionAutomaticallyIOS: false,
+  },
+});
+```
+
+**Android Structure:**
+
+```tsx
+await requestPurchase({
+  request: {skus: [productId]},
+});
+```
+
+**Platform-specific Implementation:**
+
+```tsx
+if (Platform.OS === 'ios') {
+  await requestPurchase({
+    request: {
+      sku: productId,
+      andDangerouslyFinishTransactionAutomaticallyIOS: false,
+    },
+  });
+} else {
+  await requestPurchase({
+    request: {skus: [productId]},
+  });
+}
+```
+
+### Receipt Validation Differences
+
+Subscription validation requires different approaches:
+
+- **iOS**: Send `transactionReceipt` to Apple's validation servers
+- **Android**: Send `purchaseToken` and `packageName` to Google Play validation
+
+This is handled in the `validateSubscriptionStatus` function with platform-specific logic.
 
 ## Server-Side Implementation
 

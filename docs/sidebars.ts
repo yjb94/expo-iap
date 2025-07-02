@@ -62,6 +62,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'examples/basic-store',
         'examples/subscription-manager',
+        'examples/complete-impl',
       ],
     },
     {

@@ -467,5 +467,5 @@ const purchaseProduct = async (sku) => {
 
 - Review [Purchase Implementation Guide](./purchases) for detailed code examples
 - Check out [Error Handling Guide](./troubleshooting) for debugging tips
-- Explore [Complete Store Example](../examples/complete-store) for production-ready code
+- Explore [Complete Store Example](../examples/complete-impl) for production-ready code
 - See [API Reference](../api/) for detailed method documentation

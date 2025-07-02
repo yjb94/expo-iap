@@ -738,4 +738,4 @@ Other helpful resources:
 
 - [Error Handling Guide](./troubleshooting) for debugging purchase issues
 - [API Reference](../api/) for detailed method documentation
-- [Complete Store Example](../examples/complete-store) for production-ready implementation
+- [Complete Store Example](../examples/complete-impl) for production-ready implementation
