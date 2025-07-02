@@ -23,7 +23,7 @@ This section covers the core methods available in expo-iap for managing in-app p
 
 **💡 Best Practice:** Always include both `sku` (for iOS) and `skus` (for Android) in your request objects to ensure cross-platform compatibility.
 
-**🎯 Recommended Approach:** For the best developer experience, use the [`useIAP` hook](/docs/api/hooks/useIAP) which handles platform differences automatically and provides a cleaner callback-based API.
+**🎯 Recommended Approach:** For the best developer experience, use the [`useIAP` hook](/docs/api/use-iap) which handles platform differences automatically and provides a cleaner callback-based API.
 
 ```tsx
 // ✅ Cross-platform compatible

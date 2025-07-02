@@ -680,6 +680,70 @@ const openSubscriptionManagement = () => {
 };
 ```
 
+### Receipt Validation
+
+**Important:** Always validate receipts on your server for security and fraud prevention. Client-side validation is not sufficient for production apps.
+
+```tsx
+const handleValidateReceipt = useCallback(
+  async (sku: string, purchase: any) => {
+    try {
+      if (Platform.OS === 'ios') {
+        return await validateReceipt(sku);
+      } else if (Platform.OS === 'android') {
+        const purchaseToken = purchase.purchaseTokenAndroid;
+        const packageName = purchase.packageNameAndroid || 'your.package.name';
+        const isSub = subscriptionSkus.includes(sku);
+
+        return await validateReceipt(sku, {
+          packageName,
+          productToken: purchaseToken,
+          isSub,
+        });
+      }
+      return {isValid: true}; // Default for unsupported platforms
+    } catch (error) {
+      console.error('Receipt validation failed:', error);
+      return {isValid: false};
+    }
+  },
+  [validateReceipt],
+);
+
+// Use in purchase handler
+const handlePurchaseUpdate = async (purchase: any) => {
+  try {
+    const productId = purchase.id;
+
+    // Validate receipt on your server
+    const validationResult = await handleValidateReceipt(productId, purchase);
+
+    if (validationResult.isValid) {
+      // Process the purchase
+      await finishTransaction({
+        purchase,
+        isConsumable: bulbPackSkus.includes(productId),
+      });
+
+      // Update user's purchase state in your app
+      updateUserPurchases(productId);
+    } else {
+      console.error('Receipt validation failed for:', productId);
+      // Handle invalid receipt
+    }
+  } catch (error) {
+    console.error('Purchase processing failed:', error);
+  }
+};
+```
+
+**Best Practices:**
+
+- Always validate on your server, never trust client-side validation alone
+- Store purchase receipts in your database for future reference
+- Implement retry logic for failed validations due to network issues
+- Log validation failures for fraud detection and analysis
+
 ## Error Handling
 
 Implement comprehensive error handling for various scenarios:
