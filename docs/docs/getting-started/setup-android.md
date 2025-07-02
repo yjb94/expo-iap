@@ -86,6 +86,7 @@ To test in-app purchases, you must upload your app to Google Play Console:
 ### 3. Test Payment Method
 
 Test users should:
+
 1. Use the added test Gmail account on their device
 2. Have a valid payment method (won't be charged for test purchases)
 3. Install the app from the testing track
@@ -95,7 +96,7 @@ Test users should:
 ### Basic Setup
 
 ```tsx
-import { useIAP, ErrorCode } from 'expo-iap';
+import {useIAP, ErrorCode} from 'expo-iap';
 
 const androidProductIds = [
   'premium_upgrade',
@@ -125,8 +126,12 @@ function App() {
   React.useEffect(() => {
     if (connected) {
       // Fetch products and subscriptions
-      getProducts(androidProductIds.filter(id => !id.includes('subscription')));
-      getSubscriptions(androidProductIds.filter(id => id.includes('subscription')));
+      getProducts(
+        androidProductIds.filter((id) => !id.includes('subscription')),
+      );
+      getSubscriptions(
+        androidProductIds.filter((id) => id.includes('subscription')),
+      );
     }
   }, [connected]);
 
@@ -136,10 +141,13 @@ function App() {
       {products.map((product) => (
         <AndroidProductItem key={product.id} product={product} />
       ))}
-      
+
       {/* Render subscriptions */}
       {subscriptions.map((subscription) => (
-        <AndroidSubscriptionItem key={subscription.id} subscription={subscription} />
+        <AndroidSubscriptionItem
+          key={subscription.id}
+          subscription={subscription}
+        />
       ))}
     </View>
   );
@@ -149,13 +157,13 @@ function App() {
 ### Android-Specific Product Handling
 
 ```tsx
-const AndroidProductItem = ({ product }: { product: Product }) => {
-  const { requestPurchase } = useIAP();
+const AndroidProductItem = ({product}: {product: Product}) => {
+  const {requestPurchase} = useIAP();
 
   const handlePurchase = () => {
     if (product.platform === 'android') {
       requestPurchase({
-        request: { skus: [product.id] },
+        request: {skus: [product.id]},
         type: 'inapp',
       });
     }
@@ -173,7 +181,8 @@ const AndroidProductItem = ({ product }: { product: Product }) => {
 ```
 
 > **💡 Cross-Platform Note:** This example shows Android-specific usage with `skus`. For cross-platform compatibility, include both `sku` and `skus` in your request object. See the [Core Methods](/docs/api/methods/core-methods#requestpurchase) documentation for details.
-```
+
+````
 
 ### Android-Specific Subscription Handling
 
@@ -202,8 +211,8 @@ const AndroidSubscriptionItem = ({ subscription }: { subscription: SubscriptionP
     <View>
       <Text>{subscription.title}</Text>
       {subscription.subscriptionOfferDetails?.map((offer) => (
-        <TouchableOpacity 
-          key={offer.offerId} 
+        <TouchableOpacity
+          key={offer.offerId}
           onPress={() => handleSubscribe(offer)}
         >
           <Text>
@@ -217,7 +226,7 @@ const AndroidSubscriptionItem = ({ subscription }: { subscription: SubscriptionP
     </View>
   );
 };
-```
+````
 
 ### Error Handling for Android
 
@@ -228,7 +237,10 @@ const handleAndroidError = (error: PurchaseError) => {
       // User cancelled - no action needed
       break;
     case ErrorCode.E_ITEM_UNAVAILABLE:
-      Alert.alert('Product Unavailable', 'This item is not available for purchase');
+      Alert.alert(
+        'Product Unavailable',
+        'This item is not available for purchase',
+      );
       break;
     case ErrorCode.E_SERVICE_ERROR:
       Alert.alert('Service Error', 'Google Play services are unavailable');
@@ -246,8 +258,8 @@ const handleAndroidError = (error: PurchaseError) => {
 
 ### Product IDs Not Found
 
-**Problem**: Products return empty or show as unavailable
-**Solutions**:
+**Problem**: Products return empty or show as unavailable **Solutions**:
+
 - Verify product IDs match exactly between code and Play Console
 - Ensure products are **Active** in Play Console
 - Check that app is uploaded to at least Internal testing track
@@ -255,8 +267,8 @@ const handleAndroidError = (error: PurchaseError) => {
 
 ### Testing Issues
 
-**Problem**: "Item not found" or "Authentication required" errors
-**Solutions**:
+**Problem**: "Item not found" or "Authentication required" errors **Solutions**:
+
 - Use Gmail accounts added as test users
 - Install app from testing track, not directly via ADB
 - Ensure test user has a valid payment method
@@ -264,8 +276,8 @@ const handleAndroidError = (error: PurchaseError) => {
 
 ### Purchase Flow Issues
 
-**Problem**: Purchase dialog doesn't appear or fails immediately
-**Solutions**:
+**Problem**: Purchase dialog doesn't appear or fails immediately **Solutions**:
+
 - Verify Google Play services are updated
 - Check device has valid Google account
 - Ensure app is properly signed
@@ -273,8 +285,8 @@ const handleAndroidError = (error: PurchaseError) => {
 
 ### Subscription Issues
 
-**Problem**: Subscription offers not showing or failing
-**Solutions**:
+**Problem**: Subscription offers not showing or failing **Solutions**:
+
 - Verify base plans are properly configured
 - Check offer eligibility rules
 - Ensure proper offer token handling
@@ -294,15 +306,20 @@ const handleAndroidError = (error: PurchaseError) => {
 ### Proration for Subscription Changes
 
 ```tsx
-const upgradeSubscription = async (newSkuId: string, oldPurchaseToken: string) => {
+const upgradeSubscription = async (
+  newSkuId: string,
+  oldPurchaseToken: string,
+) => {
   try {
     await requestPurchase({
       request: {
         skus: [newSkuId],
-        subscriptionOffers: [{
-          sku: newSkuId,
-          offerToken: 'new_offer_token',
-        }],
+        subscriptionOffers: [
+          {
+            sku: newSkuId,
+            offerToken: 'new_offer_token',
+          },
+        ],
         replacementMode: 'IMMEDIATE_WITH_TIME_PRORATION',
         oldPurchaseToken: oldPurchaseToken,
       },
@@ -324,9 +341,9 @@ const handlePendingPurchase = (purchase: Purchase) => {
     // Show pending message to user
     Alert.alert(
       'Purchase Pending',
-      'Your purchase is being processed. You will receive access once payment is confirmed.'
+      'Your purchase is being processed. You will receive access once payment is confirmed.',
     );
-    
+
     // Store pending purchase for later verification
     storePendingPurchase(purchase);
   }

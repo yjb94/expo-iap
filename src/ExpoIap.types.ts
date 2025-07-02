@@ -73,7 +73,7 @@ export type ProductPurchase =
   | (ProductPurchaseAndroid & AndroidPlatform)
   | (ProductPurchaseIos & IosPlatform);
 
-// Union type for platform-specific subscription purchase types (legacy support)  
+// Union type for platform-specific subscription purchase types (legacy support)
 export type SubscriptionPurchase =
   | (ProductPurchaseAndroid & AndroidPlatform & {autoRenewingAndroid: boolean})
   | (ProductPurchaseIos & IosPlatform);
@@ -308,15 +308,15 @@ export const ErrorCodeUtils = {
  */
 export interface UnifiedRequestPurchaseProps {
   // Universal properties - works on both platforms
-  readonly sku?: string;     // Single SKU (iOS native, Android fallback)
-  readonly skus?: string[];  // Multiple SKUs (Android native, iOS uses first item)
-  
+  readonly sku?: string; // Single SKU (iOS native, Android fallback)
+  readonly skus?: string[]; // Multiple SKUs (Android native, iOS uses first item)
+
   // iOS-specific properties (ignored on Android)
   readonly andDangerouslyFinishTransactionAutomaticallyIOS?: boolean;
   readonly appAccountToken?: string;
   readonly quantity?: number;
   readonly withOffer?: import('./types/ExpoIapIos.types').PaymentDiscount;
-  
+
   // Android-specific properties (ignored on iOS)
   readonly obfuscatedAccountIdAndroid?: string;
   readonly obfuscatedProfileIdAndroid?: string;
@@ -326,7 +326,8 @@ export interface UnifiedRequestPurchaseProps {
 /**
  * Unified subscription request props
  */
-export interface UnifiedRequestSubscriptionProps extends UnifiedRequestPurchaseProps {
+export interface UnifiedRequestSubscriptionProps
+  extends UnifiedRequestPurchaseProps {
   // Android subscription-specific properties
   readonly purchaseTokenAndroid?: string;
   readonly replacementModeAndroid?: number;

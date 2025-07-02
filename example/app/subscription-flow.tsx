@@ -8,10 +8,7 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
-import {
-  requestPurchase,
-  useIAP,
-} from '../../src';
+import {requestPurchase, useIAP} from '../../src';
 import type {SubscriptionProduct, PurchaseError} from '../../src/ExpoIap.types';
 
 /**
@@ -29,15 +26,11 @@ export default function SubscriptionFlow() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Use the useIAP hook for managing subscriptions
-  const {
-    connected,
-    subscriptions,
-    getSubscriptions,
-  } = useIAP({
+  const {connected, subscriptions, getSubscriptions} = useIAP({
     onPurchaseSuccess: (purchase) => {
       console.log('Subscription successful:', purchase);
       setIsProcessing(false);
-      
+
       // Handle successful subscription
       setPurchaseResult(
         `✅ Subscription successful (${purchase.platform})\n` +
@@ -52,14 +45,17 @@ export default function SubscriptionFlow() {
     onPurchaseError: (error: PurchaseError) => {
       console.error('Subscription failed:', error);
       setIsProcessing(false);
-      
+
       // Handle subscription error
       setPurchaseResult(`❌ Subscription failed: ${error.message}`);
       Alert.alert('Subscription Failed', error.message);
     },
     onSyncError: (error: Error) => {
       console.warn('Sync error:', error);
-      Alert.alert('Sync Error', `Failed to sync subscriptions: ${error.message}`);
+      Alert.alert(
+        'Sync Error',
+        `Failed to sync subscriptions: ${error.message}`,
+      );
     },
   });
 
@@ -82,10 +78,11 @@ export default function SubscriptionFlow() {
 
       // Use requestPurchase for subscriptions - the result will be handled by callbacks
       await requestPurchase({
-        request: Platform.OS === 'ios' 
-          ? { sku: itemId, appAccountToken: 'user-123' }
-          : { skus: [itemId], subscriptionOffers: [] },
-        type: 'subs'
+        request:
+          Platform.OS === 'ios'
+            ? {sku: itemId, appAccountToken: 'user-123'}
+            : {skus: [itemId], subscriptionOffers: []},
+        type: 'subs',
       });
     } catch (error) {
       setIsProcessing(false);

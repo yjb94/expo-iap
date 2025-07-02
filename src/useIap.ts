@@ -218,10 +218,7 @@ export function useIAP(options?: UseIAPOptions): UseIap {
   );
 
   const requestPurchaseWithReset = useCallback(
-    async (requestObj: {
-      request: any;
-      type?: 'inapp' | 'subs';
-    }) => {
+    async (requestObj: {request: any; type?: 'inapp' | 'subs'}) => {
       clearCurrentPurchase();
       clearCurrentPurchaseError();
 

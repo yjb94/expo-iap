@@ -12,7 +12,7 @@ import styles from './index.module.css';
 function HomepageHeader() {
   const {siteConfig} = useDocusaurusContext();
   const heroImageUrl = useBaseUrl('/img/hero.png');
-  
+
   return (
     <header className={clsx('hero hero--primary', styles.heroBanner)}>
       <div className="container">
@@ -25,13 +25,15 @@ function HomepageHeader() {
             <div className={styles.buttons}>
               <Link
                 className="button button--secondary button--lg"
-                to="/docs/intro">
+                to="/docs/intro"
+              >
                 Get Started - 5min ⏱️
               </Link>
               <Link
                 className="button button--outline button--lg"
                 to="/docs/installation"
-                style={{marginLeft: '1rem'}}>
+                style={{marginLeft: '1rem'}}
+              >
                 Installation Guide
               </Link>
             </div>
@@ -54,7 +56,8 @@ export default function Home(): ReactNode {
   return (
     <Layout
       title={`${siteConfig.title} - In-App Purchase for Expo & React Native`}
-      description="Powerful in-app purchase solution for Expo and React Native with TypeScript support, centralized error handling, and cross-platform compatibility.">
+      description="Powerful in-app purchase solution for Expo and React Native with TypeScript support, centralized error handling, and cross-platform compatibility."
+    >
       <HomepageHeader />
       <main>
         <HomepageFeatures />

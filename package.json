@@ -8,7 +8,7 @@
     "build": "expo-module build",
     "clean": "expo-module clean",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx src",
-    "lint:eslint": "eslint --fix '**/*.{ts,tsx}'",
+    "lint:eslint": "eslint --fix 'src/**/*.{ts,tsx}' 'plugin/src/**/*.{ts,tsx}'",
     "lint:prettier": "prettier --write \"**/*.{md,js,jsx,ts,tsx}\"",
     "lint:tsc": "tsc -p tsconfig.json --noEmit --skipLibCheck",
     "lint:ci": "yarn lint:tsc && yarn lint:eslint && yarn lint:prettier",

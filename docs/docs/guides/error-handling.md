@@ -20,12 +20,13 @@ interface IapError {
 ## Common Error Scenarios
 
 ### Network Errors
+
 Handle network connectivity issues gracefully:
 
 ```typescript
-import { useIap } from 'expo-iap';
+import {useIap} from 'expo-iap';
 
-const { purchaseProduct } = useIap();
+const {purchaseProduct} = useIap();
 
 try {
   await purchaseProduct('product_id');
@@ -38,6 +39,7 @@ try {
 ```
 
 ### User Cancellation
+
 Gracefully handle when users cancel purchases:
 
 ```typescript
@@ -53,6 +55,7 @@ try {
 ```
 
 ### Payment Issues
+
 Handle various payment-related errors:
 
 ```typescript
@@ -61,7 +64,9 @@ try {
 } catch (error) {
   switch (error.code) {
     case 'E_PAYMENT_INVALID':
-      showMessage('Invalid payment method. Please check your payment settings.');
+      showMessage(
+        'Invalid payment method. Please check your payment settings.',
+      );
       break;
     case 'E_PAYMENT_NOT_ALLOWED':
       showMessage('Payments are not allowed on this device.');
@@ -78,6 +83,7 @@ try {
 ## Error Recovery Strategies
 
 ### Retry Logic
+
 Implement exponential backoff for transient errors:
 
 ```typescript
@@ -87,10 +93,12 @@ const retryWithBackoff = async (fn: () => Promise<any>, maxRetries = 3) => {
       return await fn();
     } catch (error) {
       if (i === maxRetries - 1) throw error;
-      
+
       // Only retry on network or temporary errors
       if (['E_NETWORK_ERROR', 'E_SERVICE_UNAVAILABLE'].includes(error.code)) {
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.pow(2, i) * 1000),
+        );
       } else {
         throw error;
       }
@@ -100,6 +108,7 @@ const retryWithBackoff = async (fn: () => Promise<any>, maxRetries = 3) => {
 ```
 
 ### Graceful Degradation
+
 Provide fallback experiences:
 
 ```typescript
@@ -124,7 +133,7 @@ Track errors for debugging and analytics:
 ```typescript
 const trackError = (error: IapError, context: string) => {
   console.error(`IAP Error in ${context}:`, error);
-  
+
   // Send to analytics
   analytics.track('iap_error', {
     error_code: error.code,
@@ -138,6 +147,7 @@ const trackError = (error: IapError, context: string) => {
 ## Best Practices
 
 ### 1. Always Handle Errors
+
 Never leave IAP operations without error handling:
 
 ```typescript
@@ -153,6 +163,7 @@ try {
 ```
 
 ### 2. Provide User-Friendly Messages
+
 Convert technical errors to user-friendly messages:
 
 ```typescript
@@ -171,11 +182,15 @@ const getUserFriendlyMessage = (error: IapError): string => {
 ```
 
 ### 3. Handle Platform Differences
+
 Some errors may be platform-specific:
 
 ```typescript
 const handlePlatformSpecificError = (error: IapError) => {
-  if (Platform.OS === 'ios' && error.code === 'E_STOREFRONT_COUNTRY_NOT_SUPPORTED') {
+  if (
+    Platform.OS === 'ios' &&
+    error.code === 'E_STOREFRONT_COUNTRY_NOT_SUPPORTED'
+  ) {
     showMessage('This product is not available in your country.');
   } else if (Platform.OS === 'android' && error.code === 'E_DEVELOPER_ERROR') {
     // Log for debugging but don't show to user

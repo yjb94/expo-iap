@@ -8,11 +8,12 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
-import {
-  requestPurchase,
-  useIAP,
-} from '../../src';
-import type {Product, ProductPurchase, PurchaseError} from '../../src/ExpoIap.types';
+import {requestPurchase, useIAP} from '../../src';
+import type {
+  Product,
+  ProductPurchase,
+  PurchaseError,
+} from '../../src/ExpoIap.types';
 
 /**
  * Purchase Flow Example - In-App Products
@@ -29,15 +30,11 @@ export default function PurchaseFlow() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Use the useIAP hook for managing purchases
-  const {
-    connected,
-    products,
-    getProducts,
-  } = useIAP({
+  const {connected, products, getProducts} = useIAP({
     onPurchaseSuccess: (purchase: ProductPurchase) => {
       console.log('Purchase successful:', purchase);
       setIsProcessing(false);
-      
+
       // Handle successful purchase
       setPurchaseResult(
         `✅ Purchase successful (${purchase.platform})\n` +
@@ -52,7 +49,7 @@ export default function PurchaseFlow() {
     onPurchaseError: (error: PurchaseError) => {
       console.error('Purchase failed:', error);
       setIsProcessing(false);
-      
+
       // Handle purchase error
       setPurchaseResult(`❌ Purchase failed: ${error.message}`);
       Alert.alert('Purchase Failed', error.message);
@@ -68,7 +65,7 @@ export default function PurchaseFlow() {
     if (connected) {
       const productIds = [
         'com.example.premium',
-        'com.example.coins_100', 
+        'com.example.coins_100',
         'com.example.remove_ads',
       ];
       getProducts(productIds);
@@ -82,10 +79,9 @@ export default function PurchaseFlow() {
 
       // Use requestPurchase - the result will be handled by onPurchaseSuccess/onPurchaseError callbacks
       await requestPurchase({
-        request: Platform.OS === 'ios' 
-          ? { sku: itemId, quantity: 1 }
-          : { skus: [itemId] },
-        type: 'inapp'
+        request:
+          Platform.OS === 'ios' ? {sku: itemId, quantity: 1} : {skus: [itemId]},
+        type: 'inapp',
       });
     } catch (error) {
       setIsProcessing(false);
@@ -99,7 +95,7 @@ export default function PurchaseFlow() {
   const retryLoadProducts = () => {
     const productIds = [
       'com.example.premium',
-      'com.example.coins_100', 
+      'com.example.coins_100',
       'com.example.remove_ads',
     ];
     getProducts(productIds);
@@ -169,7 +165,10 @@ export default function PurchaseFlow() {
               No products found. Make sure to configure your product IDs in your
               app store.
             </Text>
-            <TouchableOpacity style={styles.retryButton} onPress={retryLoadProducts}>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={retryLoadProducts}
+            >
               <Text style={styles.retryButtonText}>Retry</Text>
             </TouchableOpacity>
           </View>

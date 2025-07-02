@@ -14,7 +14,7 @@ npm start
 # Run on iOS
 npm run ios
 
-# Run on Android  
+# Run on Android
 npm run android
 ```
 
@@ -23,6 +23,7 @@ npm run android
 This example provides two focused implementations, each demonstrating best practices for specific use cases:
 
 ### 🛒 **Purchase Flow** (`/purchase-flow`)
+
 - **What**: Complete implementation for one-time in-app products
 - **Why**: Demonstrates TypeScript-first approach for product purchases
 - **Features**:
@@ -32,6 +33,7 @@ This example provides two focused implementations, each demonstrating best pract
   - Clean error handling with proper types
 
 ### 🔄 **Subscription Flow** (`/subscription-flow`)
+
 - **What**: Complete implementation for recurring subscription products
 - **Why**: Demonstrates TypeScript-first approach for subscription management
 - **Features**:
@@ -42,6 +44,7 @@ This example provides two focused implementations, each demonstrating best pract
   - Clean error handling with proper types
 
 ### ✅ **No Manual Type Casting**
+
 ```typescript
 // ❌ OLD WAY - Manual casting required
 const result = await requestPurchase(...) as ProductPurchaseIos;
@@ -55,18 +58,20 @@ const result = await requestPurchase({
 ```
 
 ### 🔄 **Universal Cross-Platform API**
+
 ```typescript
 // Works on both iOS and Android without platform checks
 const result = await requestPurchase({
   request: {
-    sku: 'product.id',        // Universal property
-    quantity: 1,              // iOS-specific (ignored on Android)
+    sku: 'product.id', // Universal property
+    quantity: 1, // iOS-specific (ignored on Android)
   },
-  type: 'inapp'
+  type: 'inapp',
 });
 ```
 
 ### 🛡️ **Type-Safe Error Handling**
+
 ```typescript
 // Enhanced API with automatic type guards
 if (isAndroidPurchaseArray(result)) {
@@ -74,7 +79,7 @@ if (isAndroidPurchaseArray(result)) {
   const purchase = result[0];
   console.log('Android Token:', purchase.purchaseTokenAndroid);
 } else if (isIosPurchase(result)) {
-  // TypeScript knows this is ProductPurchaseIos  
+  // TypeScript knows this is ProductPurchaseIos
   console.log('iOS Transaction ID:', result.transactionId);
 }
 ```
@@ -94,7 +99,7 @@ These examples demonstrate modern TypeScript-first development patterns:
 example/
 ├── App.tsx                 # Expo Router root
 ├── app/
-│   ├── _layout.tsx        # Navigation stack  
+│   ├── _layout.tsx        # Navigation stack
 │   ├── index.tsx          # Landing page with navigation
 │   ├── purchase-flow.tsx  # In-app products implementation
 │   └── subscription-flow.tsx # Subscription implementation
@@ -115,7 +120,7 @@ After running these examples:
 1. **Start with Purchase Flow** - Learn basic product purchase implementation
 2. **Explore Subscription Flow** - Understand subscription-specific patterns
 3. Replace the sample product/subscription IDs with your actual store IDs
-4. Configure your app store products and subscriptions  
+4. Configure your app store products and subscriptions
 5. Implement the patterns in your own app
 6. Test on both iOS and Android to see the unified behavior
 

@@ -3,10 +3,7 @@ module.exports = {
     browser: true,
     node: true,
   },
-  extends: [
-    'eslint:recommended',
-    '@docusaurus/eslint-plugin/recommended',
-  ],
+  extends: ['eslint:recommended', '@docusaurus/eslint-plugin/recommended'],
   settings: {
     'import/resolver': {
       node: {
@@ -18,12 +15,7 @@ module.exports = {
     'import/no-unresolved': [
       'error',
       {
-        ignore: [
-          '^@docusaurus/',
-          '^@site/',
-          '^@theme/',
-          '^@generated/',
-        ],
+        ignore: ['^@docusaurus/', '^@site/', '^@theme/', '^@generated/'],
       },
     ],
   },
