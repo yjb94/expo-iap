@@ -255,7 +255,7 @@ Expo IAP is built with a modern architecture that emphasizes:
 - [**Basic Store Example**](./examples/basic-store): Simple product store implementation
 - [**Complete Store Example**](./examples/complete-impl): Production-ready store with validation
 
-### � Guides
+### 📚 Guides
 
 - [**Getting Started**](./guides/getting-started): Complete guide to implementing in-app purchases
 - [**Purchase Lifecycle**](./guides/lifecycle): Understanding connection management and best practices
@@ -264,7 +264,7 @@ Expo IAP is built with a modern architecture that emphasizes:
 - [**FAQ**](./guides/faq): Frequently asked questions and solutions
 - [**Support**](./guides/support): Getting help and community resources
 
-### �🛠️ Advanced Topics
+### 🛠️ Advanced Topics
 
 - [**Receipt Validation**](./guides/purchases): Secure purchase validation
 - [**Error Handling**](./api/error-codes): Comprehensive error management
