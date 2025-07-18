@@ -48,7 +48,6 @@ import {
   type ProductPurchase,
   type PurchaseError,
   finishTransaction,
-  flushFailedPurchasesCachedAsPendingAndroid,
 } from 'expo-iap';
 
 class App extends Component {
@@ -57,19 +56,7 @@ class App extends Component {
 
   componentDidMount() {
     initConnection().then(() => {
-      // we make sure that "ghost" pending payment are removed
-      // (ghost = failed pending payment that are still marked as pending in Google's native Vending module cache)
-      flushFailedPurchasesCachedAsPendingAndroid()
-        .catch(() => {
-          // exception can happen here if:
-          // - there are pending purchases that are still pending (we can't consume a pending purchase)
-          // - there are other transaction inconsistencies in google play billing
-          // we don't handle those exceptions like we do for the rest of the purchase errors,
-          // since those are "retryable" exceptions;
-          // more on that below
-        })
-        .then(() => {
-          this.purchaseUpdateSubscription = purchaseUpdatedListener(
+      this.purchaseUpdateSubscription = purchaseUpdatedListener(
             (purchase: ProductPurchase) => {
               console.log('purchaseUpdatedListener', purchase);
               this.handlePurchaseUpdate(purchase);
@@ -488,20 +475,12 @@ const handleBuySubscription = async (subscriptionId: string) => {
 ### Pending Purchases
 
 ```tsx
-import { flushFailedPurchasesCachedAsPendingAndroid } from 'expo-iap';
-
 // On app initialization
 componentDidMount() {
   initConnection().then(() => {
-    // Clear any failed purchases that are stuck in pending state
-    flushFailedPurchasesCachedAsPendingAndroid()
-      .catch(() => {
-        // Handle exceptions for pending purchases that can't be cleared
-      })
-      .then(() => {
-        // Set up purchase listeners
-        this.setupPurchaseListeners();
-      });
+    // Set up purchase listeners
+    // Note: expo-iap handles pending purchases automatically
+    this.setupPurchaseListeners();
   });
 }
 ```
