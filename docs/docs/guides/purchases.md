@@ -270,6 +270,7 @@ export default function PurchaseScreen() {
       setIsLoading(true);
 
       if (Platform.OS === 'ios') {
+        // iOS: single product purchase
         await requestPurchase({
           request: {
             sku: productId,
@@ -277,6 +278,7 @@ export default function PurchaseScreen() {
           },
         });
       } else {
+        // Android: array of products (even for single purchase)
         await requestPurchase({
           request: {skus: [productId]},
         });
@@ -388,20 +390,36 @@ export default function PurchaseScreen() {
 
 ### 3. Request a Purchase
 
-```tsx
-import {requestPurchase} from 'expo-iap';
+**Important Platform Difference:**
+- **iOS**: Can only purchase one product at a time (single SKU)
+- **Android**: Can purchase multiple products at once (array of SKUs)
 
-const handleBuyProduct = async (sku) => {
+This fundamental difference requires platform-specific handling:
+
+```tsx
+import {requestPurchase, Platform} from 'expo-iap';
+
+// For regular products (consumables/non-consumables)
+const handleBuyProduct = async (productId) => {
   try {
-    await requestPurchase({sku});
+    if (Platform.OS === 'ios') {
+      // iOS: single product purchase
+      await requestPurchase({
+        request: {sku: productId}
+      });
+    } else if (Platform.OS === 'android') {
+      // Android: array of products (even for single purchase)
+      await requestPurchase({
+        request: {skus: [productId]}
+      });
+    }
   } catch (err) {
-    // standardized err.code and err.message available
     console.warn(err.code, err.message);
   }
 };
 ```
 
-**Important:** For subscriptions on Android, you need to handle subscription offers properly:
+**For subscriptions, the platform differences are even more significant:**
 
 ```tsx
 const handleBuySubscription = async (subscriptionId: string) => {
@@ -661,23 +679,37 @@ const openSubscriptionManagement = () => {
 
 ### Receipt Validation
 
-**Important:** Always validate receipts on your server for security and fraud prevention. Client-side validation is not sufficient for production apps.
+**Important Platform Differences for Receipt Validation:**
+- **iOS**: Only requires the SKU for validation
+- **Android**: Requires additional parameters including `packageName`, `productToken`, and optionally `accessToken`
+
+**Always validate receipts on your server for security and fraud prevention.** Client-side validation is not sufficient for production apps.
 
 ```tsx
 const handleValidateReceipt = useCallback(
   async (sku: string, purchase: any) => {
     try {
       if (Platform.OS === 'ios') {
+        // iOS: Simple validation with just SKU
         return await validateReceipt(sku);
       } else if (Platform.OS === 'android') {
+        // Android: Requires additional validation parameters
         const purchaseToken = purchase.purchaseTokenAndroid;
         const packageName = purchase.packageNameAndroid || 'your.package.name';
         const isSub = subscriptionSkus.includes(sku);
+
+        // Check required Android parameters before validation
+        if (!purchaseToken || !packageName) {
+          throw new Error(
+            'Android validation requires packageName and productToken'
+          );
+        }
 
         return await validateReceipt(sku, {
           packageName,
           productToken: purchaseToken,
           isSub,
+          // accessToken may be required for server-side validation
         });
       }
       return {isValid: true}; // Default for unsupported platforms

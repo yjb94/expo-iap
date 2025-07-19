@@ -14,43 +14,40 @@ This section covers the core methods available in expo-iap for managing in-app p
 
 ## 🚨 Important Platform Differences
 
-> **Critical for Cross-Platform Development:** iOS and Android have different parameter requirements for purchase methods.
+> **Critical for Cross-Platform Development:** iOS and Android have fundamental differences in their purchase APIs.
+
+### Key Differences:
+- **iOS**: Can only purchase **one product at a time** (single SKU)
+- **Android**: Can purchase **multiple products at once** (array of SKUs)
+
+This difference exists because:
+- iOS App Store processes purchases individually
+- Google Play Store supports batch purchases
 
 | Method | iOS | Android | Cross-Platform Solution |
 | --- | --- | --- | --- |
-| `requestPurchase()` | Uses `sku: string` | Uses `skus: string[]` | Include both `sku` and `skus` |
-| `requestSubscription()` | Uses `sku: string` | Uses `skus: string[]` + `subscriptionOffers` | Include both `sku` and `skus` |
+| `requestPurchase()` | Uses `sku: string` | Uses `skus: string[]` | Platform-specific handling required |
+| `requestSubscription()` | Uses `sku: string` | Uses `skus: string[]` + `subscriptionOffers` | Platform-specific handling required |
 
-**💡 Best Practice:** Always include both `sku` (for iOS) and `skus` (for Android) in your request objects to ensure cross-platform compatibility.
-
-**🎯 Recommended Approach:** For the best developer experience, use the [ `useIAP` hook](/docs/api/use-iap) which handles platform differences automatically and provides a cleaner callback-based API.
+**💡 Best Practice:** Always check the platform before calling purchase methods:
 
 ```tsx
-// ✅ Cross-platform compatible
-await requestPurchase({
-  request: {
-    sku: productId, // iOS
-    skus: [productId], // Android
-  },
-  type: 'inapp',
-});
+import {Platform} from 'react-native';
 
-// ❌ iOS only - will fail on Android
-await requestPurchase({
-  request: {
-    sku: productId,
-  },
-  type: 'inapp',
-});
-
-// ❌ Android only - will fail on iOS
-await requestPurchase({
-  request: {
-    skus: [productId],
-  },
-  type: 'inapp',
-});
+if (Platform.OS === 'ios') {
+  // iOS: single product
+  await requestPurchase({
+    request: {sku: productId}
+  });
+} else if (Platform.OS === 'android') {
+  // Android: array of products
+  await requestPurchase({
+    request: {skus: [productId]}
+  });
+}
 ```
+
+**🎯 Recommended Approach:** For the best developer experience, use the [ `useIAP` hook](/docs/api/use-iap) which handles platform differences automatically and provides a cleaner callback-based API.
 
 ## initConnection()
 
@@ -173,22 +170,34 @@ const fetchSubscriptions = async () => {
 
 Initiates a purchase request for a product.
 
-> **⚠️ Platform Differences:** iOS uses `sku` (single product), while Android uses `skus` (array). For cross-platform compatibility, provide both properties.
+> **⚠️ Platform Differences:** 
+> - **iOS**: Can only purchase one product at a time (uses `sku: string`)
+> - **Android**: Can purchase multiple products at once (uses `skus: string[]`)
 
-### Cross-Platform Usage (Recommended)
+### Platform-Specific Usage (Recommended)
 
 ```tsx
-import {requestPurchase} from 'expo-iap';
+import {requestPurchase, Platform} from 'expo-iap';
 
 const buyProduct = async (productId: string) => {
   try {
-    await requestPurchase({
-      request: {
-        sku: productId, // Required for iOS
-        skus: [productId], // Required for Android
-      },
-      type: 'inapp',
-    });
+    if (Platform.OS === 'ios') {
+      // iOS: single product purchase
+      await requestPurchase({
+        request: {
+          sku: productId,
+        },
+        type: 'inapp',
+      });
+    } else if (Platform.OS === 'android') {
+      // Android: array of products (even for single purchase)
+      await requestPurchase({
+        request: {
+          skus: [productId],
+        },
+        type: 'inapp',
+      });
+    }
     // Purchase result will be delivered via purchase listeners
   } catch (error) {
     console.error('Purchase request failed:', error);
@@ -196,7 +205,7 @@ const buyProduct = async (productId: string) => {
 };
 ```
 
-### Platform-Specific Usage
+### Detailed Platform Examples
 
 #### iOS Only
 
@@ -246,23 +255,42 @@ await requestPurchase({
 
 Initiates a subscription purchase request.
 
-> **⚠️ Platform Differences:** iOS uses `sku` (single subscription), while Android uses `skus` (array) with `subscriptionOffers` . For cross-platform compatibility, provide both properties.
+> **⚠️ Platform Differences:** 
+> - **iOS**: Can only purchase one subscription at a time (uses `sku: string`)
+> - **Android**: Can purchase multiple subscriptions at once (uses `skus: string[]` with `subscriptionOffers`)
 
-### Cross-Platform Usage (Recommended)
+### Platform-Specific Usage (Recommended)
 
 ```tsx
-import {requestPurchase} from 'expo-iap';
+import {requestPurchase, Platform} from 'expo-iap';
 
-const buySubscription = async (subscriptionId: string) => {
+const buySubscription = async (subscriptionId: string, subscription?: any) => {
   try {
-    await requestPurchase({
-      request: {
-        sku: subscriptionId, // Required for iOS
-        skus: [subscriptionId], // Required for Android
-        subscriptionOffers: [], // Required for Android (can be empty)
-      },
-      type: 'subs',
-    });
+    if (Platform.OS === 'ios') {
+      // iOS: single subscription purchase
+      await requestPurchase({
+        request: {
+          sku: subscriptionId,
+        },
+        type: 'subs',
+      });
+    } else if (Platform.OS === 'android') {
+      // Android: handle subscription offers
+      const subscriptionOffers = subscription?.subscriptionOfferDetails?.map(
+        (offer: any) => ({
+          sku: subscriptionId,
+          offerToken: offer.offerToken,
+        })
+      ) || [{sku: subscriptionId, offerToken: ''}];
+
+      await requestPurchase({
+        request: {
+          skus: [subscriptionId],
+          subscriptionOffers,
+        },
+        type: 'subs',
+      });
+    }
     // Purchase result will be delivered via purchase listeners
   } catch (error) {
     console.error('Subscription request failed:', error);
