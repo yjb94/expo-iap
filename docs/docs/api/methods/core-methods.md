@@ -466,16 +466,32 @@ interface Purchase {
   transactionDate: number;
   transactionReceipt: string;
   purchaseToken?: string;
+  
+  // iOS-specific properties
+  originalTransactionDateIos?: number;
+  originalTransactionIdentifierIos?: string;
+  expirationDateIos?: number; // Subscription expiration date (milliseconds)
+  environmentIos?: 'Production' | 'Sandbox';
+  
+  // Android-specific properties
   dataAndroid?: string;
   signatureAndroid?: string;
-  purchaseStateAndroid?: number;
+  purchaseStateAndroid?: number; // 0 = purchased, 1 = canceled
   isAcknowledgedAndroid?: boolean;
   packageNameAndroid?: string;
   developerPayloadAndroid?: string;
   obfuscatedAccountIdAndroid?: string;
   obfuscatedProfileIdAndroid?: string;
+  autoRenewingAndroid?: boolean; // Subscription auto-renewal status
+  purchaseTokenAndroid?: string;
 }
 ```
+
+### Important Subscription Properties
+
+For subscription status checking:
+- **iOS**: Check `expirationDateIos` to determine if the subscription is still active
+- **Android**: Check `autoRenewingAndroid` to see if the user has canceled auto-renewal
 
 ## Error Handling
 

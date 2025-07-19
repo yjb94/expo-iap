@@ -666,6 +666,49 @@ useEffect(() => {
 
 ### Subscription Management
 
+#### Checking Subscription Status
+
+Platform-specific properties are available to check if a subscription is active:
+
+```tsx
+const isSubscriptionActive = (purchase: Purchase): boolean => {
+  const currentTime = Date.now();
+  
+  if (Platform.OS === 'ios') {
+    // iOS: Check expiration date
+    if (purchase.expirationDateIos) {
+      // expirationDateIos is in milliseconds
+      return purchase.expirationDateIos > currentTime;
+    }
+    
+    // For Sandbox environment, consider recent purchases as active
+    if (purchase.environmentIos === 'Sandbox') {
+      const dayInMs = 24 * 60 * 60 * 1000;
+      return purchase.transactionDate && 
+        (currentTime - purchase.transactionDate) < dayInMs;
+    }
+  } else if (Platform.OS === 'android') {
+    // Android: Check auto-renewal status
+    if (purchase.autoRenewingAndroid !== undefined) {
+      return purchase.autoRenewingAndroid;
+    }
+    
+    // Check purchase state (0 = purchased, 1 = canceled)
+    if (purchase.purchaseStateAndroid === 0) {
+      return true;
+    }
+  }
+  
+  return false;
+};
+```
+
+**Key Properties for Subscription Status:**
+- **iOS**: `expirationDateIos` - Unix timestamp when subscription expires
+- **Android**: `autoRenewingAndroid` - Boolean indicating if subscription will renew
+
+#### Managing Subscriptions
+
 Provide users with subscription management options:
 
 ```tsx
