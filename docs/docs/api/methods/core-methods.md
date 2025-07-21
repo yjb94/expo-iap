@@ -91,6 +91,30 @@ const cleanup = async () => {
 
 **Note:** When using the `useIAP` hook, connection cleanup is automatic.
 
+## getStorefront()
+
+Gets the current storefront (country code) for the user's App Store account (iOS only).
+
+```tsx
+import {getStorefront} from 'expo-iap';
+
+const fetchStorefront = async () => {
+  try {
+    const countryCode = await getStorefront();
+    console.log('User storefront:', countryCode); // e.g., 'US', 'GB', 'JP'
+    return countryCode;
+  } catch (error) {
+    console.error('Failed to get storefront:', error);
+  }
+};
+```
+
+**Returns:** `Promise<string | null>` - Returns the ISO country code of the user's App Store account, or null if unavailable.
+
+**Platform:** iOS only
+
+**Note:** This is useful for region-specific pricing, content, or features.
+
 ## getProducts()
 
 Fetches product information from the store.
@@ -119,24 +143,7 @@ const fetchProducts = async () => {
 
 **Returns:** `Promise<Product[]>`
 
-**Product Interface:**
-
-```tsx
-interface Product {
-  productId: string;
-  price: string;
-  currency: string;
-  localizedPrice: string;
-  title: string;
-  description: string;
-  type: 'inapp' | 'subs';
-  // Platform-specific fields
-  introductoryPrice?: string;
-  subscriptionPeriod?: string;
-  introductoryPricePeriod?: string;
-  freeTrialPeriod?: string;
-}
-```
+[**Product Interface**](../types.md#Product)
 
 ## getSubscriptions()
 
