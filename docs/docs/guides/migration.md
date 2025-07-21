@@ -170,13 +170,15 @@ const {
   connected,
   products,
   subscriptions,
-  purchaseHistory,
+  purchaseHistory,        // Note: singular form
   availablePurchases,
   currentPurchase,
   currentPurchaseError,
   finishTransaction,
   getProducts,
   getSubscriptions,
+  getPurchaseHistory,     // Method: singular form, not getPurchaseHistories
+  getAvailablePurchases,
   // Additional methods and better typing
 } = useIAP();
 ```
@@ -220,6 +222,19 @@ useEffect(() => {
 
 ## API Changes
 
+### Method Naming Differences
+
+While expo-iap aims to maintain compatibility with react-native-iap, there are some intentional naming improvements:
+
+| react-native-iap | expo-iap | Reason |
+|-----------------|----------|---------|
+| `getPurchaseHistory()` | `getPurchaseHistory()` | ✅ Same |
+| `purchaseHistory` (in hook) | `purchaseHistory` | ✅ Same |
+| `getAvailablePurchases()` | `getAvailablePurchases()` | ✅ Same |
+| `availablePurchases` (in hook) | `availablePurchases` | ✅ Same |
+
+**Note:** Despite what some documentation might suggest, expo-iap uses the singular form `getPurchaseHistory` (not `getPurchaseHistories`) to match react-native-iap's API.
+
 ### Method Signatures
 
 Most method signatures remain the same, but with improved TypeScript definitions:
@@ -229,6 +244,7 @@ Most method signatures remain the same, but with improved TypeScript definitions
 await getProducts({skus: ['product1', 'product2']});
 await requestPurchase({sku: 'product_id'});
 await finishTransaction({purchase});
+await getPurchaseHistory(); // Note: singular form, not getPurchaseHistories
 ```
 
 ### New Methods
