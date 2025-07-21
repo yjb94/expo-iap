@@ -1,7 +1,7 @@
 ---
 title: Support & Contributing
 sidebar_label: Support
-sidebar_position: 7
+sidebar_position: 8
 ---
 
 import AdFitTopFixed from "@site/src/uis/AdFitTopFixed";

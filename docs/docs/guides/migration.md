@@ -1,7 +1,7 @@
 ---
 title: Migration from react-native-iap
 sidebar_label: Migration Guide
-sidebar_position: 6
+sidebar_position: 7
 ---
 
 import AdFitTopFixed from "@site/src/uis/AdFitTopFixed";

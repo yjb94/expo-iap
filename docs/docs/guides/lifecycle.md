@@ -1,7 +1,7 @@
 ---
 title: Lifecycle
 sidebar_label: Lifecycle
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 import AdFitTopFixed from "@site/src/uis/AdFitTopFixed";

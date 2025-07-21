@@ -121,6 +121,23 @@ export default function SubscriptionFlow() {
     }
   };
 
+  const getIntroductoryOffer = (subscription: SubscriptionProduct): string | null => {
+    if (subscription.platform === 'ios' && subscription.subscription?.introductoryOffer) {
+      const offer = subscription.subscription.introductoryOffer;
+      switch (offer.paymentMode) {
+        case 'FREETRIAL':
+          return `${offer.periodCount} ${offer.period.unit.toLowerCase()}(s) free trial`;
+        case 'PAYASYOUGO':
+          return `${offer.displayPrice} for ${offer.periodCount} ${offer.period.unit.toLowerCase()}(s)`;
+        case 'PAYUPFRONT':
+          return `${offer.displayPrice} for first ${offer.periodCount} ${offer.period.unit.toLowerCase()}(s)`;
+        default:
+          return null;
+      }
+    }
+    return null;
+  };
+
   const getSubscriptionPeriod = (subscription: SubscriptionProduct): string => {
     if (subscription.platform === 'android') {
       const offers = subscription.subscriptionOfferDetails;
@@ -175,6 +192,13 @@ export default function SubscriptionFlow() {
                     per {getSubscriptionPeriod(subscription)}
                   </Text>
                 </View>
+                {getIntroductoryOffer(subscription) && (
+                  <View style={styles.offerBadge}>
+                    <Text style={styles.offerText}>
+                      {getIntroductoryOffer(subscription)}
+                    </Text>
+                  </View>
+                )}
               </View>
               <TouchableOpacity
                 style={[
@@ -380,5 +404,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#0066cc',
     lineHeight: 20,
+  },
+  offerBadge: {
+    backgroundColor: '#e7f3ff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  offerText: {
+    fontSize: 12,
+    color: '#0066cc',
+    fontWeight: '600',
   },
 });
