@@ -50,6 +50,13 @@ export default function Home() {
             <Text style={styles.buttonSubtext}>Recurring subscriptions</Text>
           </TouchableOpacity>
         </Link>
+
+        <Link href="/offer-code" asChild>
+          <TouchableOpacity style={[styles.button, styles.tertiaryButton]}>
+            <Text style={styles.buttonText}>🎁 Offer Code Redemption</Text>
+            <Text style={styles.buttonSubtext}>Redeem promo codes</Text>
+          </TouchableOpacity>
+        </Link>
       </View>
     </View>
   );
@@ -105,6 +112,9 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     backgroundColor: '#28a745',
+  },
+  tertiaryButton: {
+    backgroundColor: '#6c757d',
   },
   buttonText: {
     color: 'black',
