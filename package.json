@@ -11,8 +11,7 @@
     "lint:eslint": "eslint --fix 'src/**/*.{ts,tsx}' 'plugin/src/**/*.{ts,tsx}'",
     "lint:prettier": "prettier --write \"**/*.{md,js,jsx,ts,tsx}\"",
     "lint:tsc": "tsc -p tsconfig.json --noEmit --skipLibCheck",
-    "lint:ci": "yarn lint:tsc && yarn lint:eslint && yarn lint:prettier",
-    "test": "expo-module test",
+    "lint:ci": "bun run lint:tsc && bun run lint:eslint && bun run lint:prettier",
     "prepare": "expo-module prepare",
     "expo-module": "expo-module",
     "open:ios": "xed example/ios",
@@ -24,7 +23,7 @@
     "docs:start": "cd docs && bun run start",
     "docs:build": "cd docs && bun run build",
     "docs:serve": "cd docs && bun run serve",
-    "docs:install": "cd docs && bun install --yarn"
+    "docs:install": "cd docs && bun install"
   },
   "keywords": [
     "react-native",

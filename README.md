@@ -29,6 +29,16 @@ The `expo-iap` module has been migrated from [react-native-iap](https://github.c
 npx expo install expo-iap
 ```
 
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details on:
+
+- Development setup
+- Running the example app
+- Testing guidelines
+- Code style and conventions
+- Submitting pull requests
+
 For detailed usage examples and error handling, see the [documentation](https://expo-iap.hyo.dev).
 
 > Sharing your thoughts—any feedback would be greatly appreciated!
