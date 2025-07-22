@@ -1,6 +1,6 @@
 {
   "name": "expo-iap",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "In App Purchase module in Expo",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -33,11 +33,11 @@
   ],
   "repository": "https://github.com/hyochan/expo-iap",
   "bugs": {
-    "url": "https://github.com/hyochan/issues"
+    "url": "https://github.com/hyochan/expo-iap/issues"
   },
   "author": "hyochan <hyochan.dev@gmail.com> (https://github.com/hyochan)",
   "license": "MIT",
-  "homepage": "https://github.com/hyochan#readme",
+  "homepage": "https://github.com/hyochan/expo-iap#readme",
   "dependencies": {},
   "devDependencies": {
     "@types/react": "~19.1.7",
