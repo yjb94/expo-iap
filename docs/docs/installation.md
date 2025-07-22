@@ -53,6 +53,8 @@ If you're using React Native CLI projects, you'll need to install expo-modules-c
 npx install-expo-modules@latest
 ```
 
+Learn more about [installing Expo modules in existing React Native projects](https://docs.expo.dev/bare/installing-expo-modules/).
+
 Then install the native dependencies:
 
 #### iOS
