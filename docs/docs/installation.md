@@ -33,10 +33,10 @@ npm install expo-iap
 
 If you're using Expo managed workflow, you'll need to create a [custom development client](https://docs.expo.dev/development/create-development-builds/) since in-app purchases require native modules that aren't available in Expo Go.
 
-1. **Install Expo CLI** (if not already installed):
+1. **Install EAS CLI** (if not already installed):
 
    ```bash
-   npm install -g @expo/cli
+   npm install -g eas-cli
    ```
 
 2. **Create a development build**:
@@ -45,9 +45,15 @@ If you're using Expo managed workflow, you'll need to create a [custom developme
    eas build --platform android --profile development
    ```
 
-### For Expo Bare Workflow
+### For React Native CLI Projects
 
-If you're using Expo bare workflow or vanilla React Native, you'll need to install the native dependencies:
+If you're using React Native CLI projects, you'll need to install expo-modules-core first:
+
+```bash
+npx install-expo-modules@latest
+```
+
+Then install the native dependencies:
 
 #### iOS
 
