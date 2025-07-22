@@ -60,3 +60,20 @@
 [data-theme='dark'] .hero--primary {
   --ifm-hero-text-color: #e6c299;
 }
+
+/* Blog sidebar title size adjustment */
+.theme-blog-sidebar-item-title {
+  font-size: 0.75rem !important;
+  line-height: 1.3 !important;
+}
+
+/* Blog sidebar container adjustment */
+aside[class*="blogSidebarDesktop"] .theme-blog-sidebar-item-title,
+aside[class*="blogSidebarMobile"] .theme-blog-sidebar-item-title {
+  font-size: 0.75rem !important;
+}
+
+/* Additional blog sidebar styling */
+aside[class*="blogSidebar"] h3 {
+  font-size: 0.875rem !important;
+}

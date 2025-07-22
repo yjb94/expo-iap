@@ -180,7 +180,7 @@ const config: Config = {
             },
             {
               label: 'LinkedIn',
-              href: 'https://linkedin.com/in/hyochan',
+              href: 'https://linkedin.com/in/hyochanjang',
             },
             {
               label: 'X',
