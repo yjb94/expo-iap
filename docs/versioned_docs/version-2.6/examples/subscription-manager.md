@@ -305,18 +305,18 @@ export default function SubscriptionManager() {
       console.log('Requesting subscription:', productId);
 
       // Platform-specific subscription purchase requests
-      await requestPurchase({
-        request: {
-          ios: {
+      if (Platform.OS === 'ios') {
+        await requestPurchase({
+          request: {
             sku: productId,
             andDangerouslyFinishTransactionAutomaticallyIOS: false,
           },
-          android: {
-            skus: [productId],
-          },
-        },
-        type: 'subs',
-      });
+        });
+      } /* Platform.OS === "android" */ else {
+        await requestPurchase({
+          request: {skus: [productId]},
+        });
+      }
     } catch (error) {
       console.error('Subscription request failed:', error);
       Alert.alert('Error', 'Failed to start subscription purchase');
@@ -663,22 +663,40 @@ const styles = StyleSheet.create({
 
 **Important**: iOS and Android have different parameter structures for subscription purchases:
 
-**Unified Structure (v2.7.0+):**
+**iOS Structure:**
 
 ```tsx
-// New API - no Platform.OS checks needed!
 await requestPurchase({
   request: {
-    ios: {
+    sku: productId,
+    andDangerouslyFinishTransactionAutomaticallyIOS: false,
+  },
+});
+```
+
+**Android Structure:**
+
+```tsx
+await requestPurchase({
+  request: {skus: [productId]},
+});
+```
+
+**Platform-specific Implementation:**
+
+```tsx
+if (Platform.OS === 'ios') {
+  await requestPurchase({
+    request: {
       sku: productId,
       andDangerouslyFinishTransactionAutomaticallyIOS: false,
     },
-    android: {
-      skus: [productId],
-    },
-  },
-  type: 'subs',
-});
+  });
+} else {
+  await requestPurchase({
+    request: {skus: [productId]},
+  });
+}
 ```
 
 ### Receipt Validation Differences

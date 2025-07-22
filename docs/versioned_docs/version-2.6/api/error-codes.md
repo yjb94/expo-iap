@@ -341,12 +341,7 @@ const handlePurchaseWithRetry = async (productId: string, retryCount = 0) => {
   const MAX_RETRIES = 2;
 
   try {
-    await requestPurchase({
-      request: {
-        ios: { sku: productId },
-        android: { skus: [productId] }
-      }
-    });
+    await requestPurchase({request: {sku: productId}});
   } catch (error: any) {
     const purchaseError = PurchaseError.fromPlatformError(error, Platform.OS);
 

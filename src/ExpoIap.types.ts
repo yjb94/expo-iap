@@ -51,12 +51,12 @@ export type SubscriptionProduct =
   | (SubscriptionProductAndroid & AndroidPlatform)
   | (SubscriptionProductIos & IosPlatform);
 
-// Internal platform-specific types (used for native interop only)
-export type RequestPurchaseProps =
+// Legacy internal platform-specific types (kept for backward compatibility)
+export type LegacyRequestPurchaseProps =
   | RequestPurchaseIosProps
   | RequestPurchaseAndroidProps;
 
-export type RequestSubscriptionProps =
+export type LegacyRequestSubscriptionProps =
   | RequestSubscriptionAndroidProps
   | RequestSubscriptionIosProps;
 
@@ -338,8 +338,120 @@ export interface UnifiedRequestSubscriptionProps
 }
 
 // ============================================================================
+// New Platform-Specific Request Types (v2.7.0+)
+// ============================================================================
+
+/**
+ * iOS-specific purchase request parameters
+ */
+export interface IosRequestPurchaseProps {
+  readonly sku: string;
+  readonly andDangerouslyFinishTransactionAutomaticallyIOS?: boolean;
+  readonly appAccountToken?: string;
+  readonly quantity?: number;
+  readonly withOffer?: import('./types/ExpoIapIos.types').PaymentDiscount;
+}
+
+/**
+ * Android-specific purchase request parameters
+ */
+export interface AndroidRequestPurchaseProps {
+  readonly skus: string[];
+  readonly obfuscatedAccountIdAndroid?: string;
+  readonly obfuscatedProfileIdAndroid?: string;
+  readonly isOfferPersonalized?: boolean;
+}
+
+/**
+ * Android-specific subscription request parameters
+ */
+export interface AndroidRequestSubscriptionProps extends AndroidRequestPurchaseProps {
+  readonly purchaseTokenAndroid?: string;
+  readonly replacementModeAndroid?: number;
+  readonly subscriptionOffers: {
+    sku: string;
+    offerToken: string;
+  }[];
+}
+
+/**
+ * Modern platform-specific request structure (v2.7.0+)
+ * Allows clear separation of iOS and Android parameters
+ */
+export interface PlatformRequestPurchaseProps {
+  readonly ios?: IosRequestPurchaseProps;
+  readonly android?: AndroidRequestPurchaseProps;
+}
+
+/**
+ * Modern platform-specific subscription request structure (v2.7.0+)
+ */
+export interface PlatformRequestSubscriptionProps {
+  readonly ios?: IosRequestPurchaseProps;
+  readonly android?: AndroidRequestSubscriptionProps;
+}
+
+/**
+ * Modern request purchase parameters (v2.7.0+)
+ * This is the recommended API moving forward
+ */
+export type RequestPurchaseProps = PlatformRequestPurchaseProps;
+
+/**
+ * Modern request subscription parameters (v2.7.0+)
+ * This is the recommended API moving forward
+ */
+export type RequestSubscriptionProps = PlatformRequestSubscriptionProps;
+
+/**
+ * Legacy request purchase parameters (deprecated)
+ * Includes both unified and old platform-specific formats
+ * @deprecated Use RequestPurchaseProps with platform-specific structure instead
+ */
+export type LegacyRequestPurchasePropsAll = UnifiedRequestPurchaseProps | LegacyRequestPurchaseProps;
+
+/**
+ * Legacy request subscription parameters (deprecated)
+ * Includes both unified and old platform-specific formats
+ * @deprecated Use RequestSubscriptionProps with platform-specific structure instead
+ */
+export type LegacyRequestSubscriptionPropsAll = UnifiedRequestSubscriptionProps | LegacyRequestSubscriptionProps;
+
+/**
+ * All supported request purchase parameters
+ * Used internally for backward compatibility
+ * @internal
+ */
+export type RequestPurchasePropsWithLegacy = RequestPurchaseProps | LegacyRequestPurchasePropsAll;
+
+/**
+ * All supported request subscription parameters
+ * Used internally for backward compatibility
+ * @internal
+ */
+export type RequestSubscriptionPropsWithLegacy = RequestSubscriptionProps | LegacyRequestSubscriptionPropsAll;
+
 // ============================================================================
 // Type Guards and Utility Functions
 // ============================================================================
 
-// Note: Type guard functions are exported from index.ts to avoid conflicts
+// Type guards to check which API style is being used
+export function isPlatformRequestProps(
+  props: RequestPurchasePropsWithLegacy | RequestSubscriptionPropsWithLegacy
+): props is PlatformRequestPurchaseProps | PlatformRequestSubscriptionProps {
+  return 'ios' in props || 'android' in props;
+}
+
+export function isUnifiedRequestProps(
+  props: RequestPurchasePropsWithLegacy | RequestSubscriptionPropsWithLegacy
+): props is UnifiedRequestPurchaseProps | UnifiedRequestSubscriptionProps {
+  return 'sku' in props || 'skus' in props;
+}
+
+export function isLegacyRequestProps(
+  props: RequestPurchasePropsWithLegacy | RequestSubscriptionPropsWithLegacy
+): props is LegacyRequestPurchaseProps | LegacyRequestSubscriptionProps {
+  return 'productId' in props || 'productIds' in props;
+}
+
+// Note: Other type guard functions are exported from index.ts to avoid conflicts

@@ -96,28 +96,31 @@ return (
 
 ### 4. Handle Purchases
 
-Process purchase requests with our new platform-specific API (v2.7.0+):
+Process purchase requests with platform-specific handling:
 
 ```tsx
+import {Platform} from 'react-native';
+
 const handlePurchase = async (productId: string) => {
   try {
-    await requestPurchase({
-      request: {
-        ios: {
-          sku: productId,
-        },
-        android: {
-          skus: [productId],
-        }
-      }
-    });
+    if (Platform.OS === 'ios') {
+      // iOS: single product purchase
+      await requestPurchase({
+        request: {sku: productId},
+      });
+    } else if (Platform.OS === 'android') {
+      // Android: array of products
+      await requestPurchase({
+        request: {skus: [productId]},
+      });
+    }
   } catch (error) {
     console.error('Purchase failed:', error);
   }
 };
 ```
 
-**No more Platform.OS checks!** The new API automatically handles platform differences. iOS can only purchase one product at a time, while Android supports purchasing multiple products in a single transaction.
+**Why the difference?** iOS can only purchase one product at a time, while Android supports purchasing multiple products in a single transaction.
 
 ### 5. Complete Transactions
 
@@ -152,7 +155,7 @@ Here's a complete working example:
 
 ```tsx
 import React, {useEffect} from 'react';
-import {View, Text, Button, StyleSheet} from 'react-native';
+import {View, Text, Button, StyleSheet, Platform} from 'react-native';
 import {useIAP} from 'expo-iap';
 
 export default function SimpleStore() {
@@ -192,16 +195,17 @@ export default function SimpleStore() {
 
   const handlePurchase = async (productId: string) => {
     try {
-      await requestPurchase({
-        request: {
-          ios: {
-            sku: productId,
-          },
-          android: {
-            skus: [productId],
-          }
-        }
-      });
+      if (Platform.OS === 'ios') {
+        // iOS: single product purchase
+        await requestPurchase({
+          request: {sku: productId},
+        });
+      } else if (Platform.OS === 'android') {
+        // Android: array of products
+        await requestPurchase({
+          request: {skus: [productId]},
+        });
+      }
     } catch (error) {
       console.error('Purchase failed:', error);
     }

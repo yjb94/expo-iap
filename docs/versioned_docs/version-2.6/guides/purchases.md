@@ -269,18 +269,20 @@ export default function PurchaseScreen() {
     try {
       setIsLoading(true);
 
-      // Platform-specific purchase request (v2.7.0+)
-      await requestPurchase({
-        request: {
-          ios: {
+      if (Platform.OS === 'ios') {
+        // iOS: single product purchase
+        await requestPurchase({
+          request: {
             sku: productId,
             andDangerouslyFinishTransactionAutomaticallyIOS: false,
           },
-          android: {
-            skus: [productId],
-          },
-        },
-      });
+        });
+      } else {
+        // Android: array of products (even for single purchase)
+        await requestPurchase({
+          request: {skus: [productId]},
+        });
+      }
     } catch (error) {
       setIsLoading(false);
       console.error('Purchase request failed:', error);
@@ -300,28 +302,41 @@ export default function PurchaseScreen() {
     try {
       setIsLoading(true);
 
-      // Find subscription to get offer details
-      const subscription = subscriptions.find((s) => s.id === subscriptionId);
-      const subscriptionOffers = subscription?.subscriptionOfferDetails?.map(
-        (offer) => ({
-          sku: subscriptionId,
-          offerToken: offer.offerToken,
-        }),
-      ) || [{sku: subscriptionId, offerToken: ''}];
+      if (Platform.OS === 'ios') {
+        await requestPurchase({
+          request: {sku: subscriptionId},
+          type: 'subs',
+        });
+      } else if (Platform.OS === 'android') {
+        // Find subscription to get offer details
+        const subscription = subscriptions.find((s) => s.id === subscriptionId);
 
-      // Platform-specific subscription request (v2.7.0+)
-      await requestPurchase({
-        request: {
-          ios: {
-            sku: subscriptionId,
-          },
-          android: {
-            skus: [subscriptionId],
-            subscriptionOffers,
-          },
-        },
-        type: 'subs',
-      });
+        if (subscription?.subscriptionOfferDetails?.length > 0) {
+          const subscriptionOffers = subscription.subscriptionOfferDetails.map(
+            (offer) => ({
+              sku: subscriptionId,
+              offerToken: offer.offerToken,
+            }),
+          );
+
+          await requestPurchase({
+            request: {
+              skus: [subscriptionId],
+              subscriptionOffers,
+            },
+            type: 'subs',
+          });
+        } else {
+          // Fallback for subscriptions without offers
+          await requestPurchase({
+            request: {
+              skus: [subscriptionId],
+              subscriptionOffers: [{sku: subscriptionId, offerToken: ''}],
+            },
+            type: 'subs',
+          });
+        }
+      }
     } catch (error) {
       setIsLoading(false);
       console.error('Subscription request failed:', error);

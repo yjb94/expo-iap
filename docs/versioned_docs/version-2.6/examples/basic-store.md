@@ -47,38 +47,41 @@ This example shows how to implement a basic in-app purchase store using expo-iap
 
 **Important**: iOS and Android have completely different parameter structures for `requestPurchase`:
 
-**Unified Structure (v2.7.0+):**
+**iOS Structure:**
 
 ```tsx
 await requestPurchase({
   request: {
-    ios: {
-      sku: productId,
-      andDangerouslyFinishTransactionAutomaticallyIOS: false,
-    },
-    android: {
-      skus: [productId],
-    },
+    sku: productId,
+    andDangerouslyFinishTransactionAutomaticallyIOS: false,
   },
 });
 ```
 
-**Platform-specific Implementation (v2.7.0+):**
+**Android Structure:**
 
 ```tsx
-// New API (v2.7.0+) - No Platform.OS checks needed!
 await requestPurchase({
-  request: {
-    ios: {
+  request: {skus: [productId]},
+});
+```
+
+**Platform-specific Implementation:**
+
+```tsx
+if (Platform.OS === 'ios') {
+  await requestPurchase({
+    request: {
       sku: productId,
       // Set to false for manual transaction finishing
       andDangerouslyFinishTransactionAutomaticallyIOS: false,
     },
-    android: {
-      skus: [productId],
-    },
-  },
-});
+  });
+} else {
+  await requestPurchase({
+    request: {skus: [productId]},
+  });
+}
 ```
 
 ### Key iOS Options
