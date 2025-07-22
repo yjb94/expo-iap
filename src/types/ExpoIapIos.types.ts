@@ -153,6 +153,6 @@ export type AppTransactionIOS = {
   signedDate: number;
   appID?: number;
   appVersionID?: number;
-  originalPlatform: string;
+  originalPlatform?: string; // Only available in iOS 18.4+
   preorderDate?: number;
 };

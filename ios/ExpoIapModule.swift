@@ -267,8 +267,8 @@ public class ExpoIapModule: Module {
                     return nil
                 }
                 
-                return [
-                    "appTransactionID": appTransaction.id,
+                var result: [String: Any?] = [
+                    "appTransactionID": appTransaction.appTransactionID,
                     "bundleID": appTransaction.bundleID,
                     "appVersion": appTransaction.appVersion,
                     "originalAppVersion": appTransaction.originalAppVersion,
@@ -279,9 +279,14 @@ public class ExpoIapModule: Module {
                     "signedDate": appTransaction.signedDate.timeIntervalSince1970 * 1000,
                     "appID": appTransaction.appID,
                     "appVersionID": appTransaction.appVersionID,
-                    "originalPlatform": appTransaction.originalPlatform.rawValue,
-                    "preorderDate": appTransaction.preorderDate?.timeIntervalSince1970.map { $0 * 1000 }
+                    "preorderDate": appTransaction.preorderDate.map { $0.timeIntervalSince1970 * 1000 }
                 ]
+                
+                if #available(iOS 18.4, *) {
+                    result["originalPlatform"] = appTransaction.originalPlatform.rawValue
+                }
+                
+                return result
             } else {
                 throw Exception(
                     name: "ExpoIapModule",
