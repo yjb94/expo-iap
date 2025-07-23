@@ -34,6 +34,8 @@ If you're using the Expo managed workflow, you **must** use a [custom developmen
 After installing the package, you need to:
 
 1. **Configure expo-build-properties for Android** (required for Kotlin 2.0+ support):
+
+   Starting from version 2.7, expo-iap supports Google Play Billing Library v8, which requires Kotlin 2.0+. Since `expo-modules-core` doesn't support Kotlin 2.0 yet, you need to manually configure the Kotlin version.
    
    Add the following to your `app.json`:
    ```json
@@ -108,7 +110,7 @@ Then install the native dependencies:
 
 #### Android
 
-**Important:** expo-iap uses Google Play Billing Library v8.0.0 which requires Kotlin 2.0+. Since `expo-modules-core` doesn't support Kotlin v2 yet, you need to configure your project with `expo-build-properties`.
+**Important:** Starting from version 2.7, expo-iap supports Google Play Billing Library v8, which requires Kotlin 2.0+. Since `expo-modules-core` doesn't support Kotlin 2.0 yet, you need to configure your project with `expo-build-properties`.
 
 Add the following to your `app.json`:
 
