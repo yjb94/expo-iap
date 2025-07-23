@@ -27,6 +27,21 @@ Install the package using your favorite package manager:
 npm install expo-iap
 ```
 
+### Important for Expo Managed Workflow
+
+If you're using the Expo managed workflow, you **must** use a [custom development client](https://docs.expo.dev/versions/latest/sdk/dev-client/) since in-app purchases require native modules that aren't available in Expo Go.
+
+After installing the package, you need to:
+
+1. **Install the plugin and run prebuild**:
+   ```bash
+   npx expo prebuild
+   ```
+   
+   This will generate the native iOS and Android directories with the necessary configurations. Learn more about [adopting prebuild](https://docs.expo.dev/guides/adopting-prebuild/).
+
+2. **Create a development build** (see the Platform Configuration section below for details)
+
 ## Platform Configuration
 
 ### For Expo Managed Workflow
