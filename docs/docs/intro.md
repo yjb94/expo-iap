@@ -251,7 +251,7 @@ Expo IAP is built with a modern architecture that emphasizes:
 
 | Platform          | Support | Notes                                        |
 | ----------------- | ------- | -------------------------------------------- |
-| iOS               | ✅      | StoreKit 1 & 2                               |
+| iOS               | ✅      | StoreKit 1 & 2 (StoreKit 2 requires iOS 15+)|
 | Android           | ✅      | Google Play Billing v5+                      |
 | Expo Go           | ⚠️      | Limited (requires custom development client) |
 | Expo Dev Client   | ✅      | Full support                                 |
