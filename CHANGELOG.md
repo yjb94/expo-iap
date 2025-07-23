@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.4] - 2025-07-24
+
+### Fixed
+- Add iOS 18.4+ availability check for `appTransactionID` property
+- Update TypeScript type to make `appTransactionID` optional for iOS versions below 18.4
+- Ensure compatibility with devices running iOS versions below 18.4
+
 ## [2.7.3] - 2025-07-23
 
 ### Fixed
