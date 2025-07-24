@@ -67,12 +67,12 @@ try {
 **expo-iap:**
 
 ```tsx
-import {IAPError} from 'expo-iap';
+import {PurchaseError} from 'expo-iap';
 
 try {
   await requestPurchase({sku: 'product_id'});
 } catch (error) {
-  if (error instanceof IAPError) {
+  if (error instanceof PurchaseError) {
     // Enhanced error handling with better typing
     console.error(error.code, error.message, error.platform);
   }
@@ -200,11 +200,11 @@ useEffect(() => {
 **After:**
 
 ```tsx
-import {IAPError} from 'expo-iap';
+import {PurchaseError} from 'expo-iap';
 
 useEffect(() => {
   if (currentPurchaseError) {
-    if (currentPurchaseError instanceof IAPError) {
+    if (currentPurchaseError instanceof PurchaseError) {
       switch (currentPurchaseError.code) {
         case 'E_USER_CANCELLED':
           // Handle user cancellation

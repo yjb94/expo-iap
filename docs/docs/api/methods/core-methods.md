@@ -634,12 +634,12 @@ For subscription status checking:
 All methods can throw errors that should be handled appropriately:
 
 ```tsx
-import {IAPError} from 'expo-iap';
+import {PurchaseError} from 'expo-iap';
 
 try {
   await requestPurchase({sku: 'product_id'});
 } catch (error) {
-  if (error instanceof IAPError) {
+  if (error instanceof PurchaseError) {
     switch (error.code) {
       case 'E_USER_CANCELLED':
         console.log('User cancelled purchase');

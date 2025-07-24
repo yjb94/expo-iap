@@ -118,7 +118,7 @@ const handlePurchaseError = (error) => {
 **Parameters:**
 
 - `callback` (function): Function to call when a purchase error occurs
-  - `error` (IAPError): The error object
+  - `error` (PurchaseError): The error object
 
 **Returns:** Subscription object with `remove()` method
 
