@@ -46,6 +46,8 @@ For each product, provide:
 
 ## Xcode Configuration
 
+> **💡 Xcode Version Requirement**: Use Xcode 16.4 or later to avoid known issues with in-app purchases. Earlier versions may cause problems like duplicate purchase events. See [#114](https://github.com/hyochan/expo-iap/issues/114) and [react-native-iap #2970](https://github.com/hyochan/react-native-iap/issues/2970) for details.
+
 ### 1. Enable In-App Purchase Capability
 
 1. Open your project in Xcode

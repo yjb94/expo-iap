@@ -242,6 +242,17 @@ const handleStoreUnavailable = () => {
    // For iOS 12.x, add SwiftUI.framework as optional
    ```
 
+3. **Xcode version issues**:
+   
+   If you're experiencing issues like duplicate purchase events or other unexpected behavior:
+   
+   - **Solution**: Upgrade to Xcode 16.4 or later
+   - **Known issues resolved**: [#114](https://github.com/hyochan/expo-iap/issues/114), [react-native-iap #2970](https://github.com/hyochan/react-native-iap/issues/2970)
+   - **Symptoms of old Xcode versions**:
+     - Duplicate purchase notifications
+     - StoreKit transaction handling errors
+     - Unexpected purchase flow behavior
+
 #### Android Issues
 
 1. **Billing client setup**:
@@ -353,7 +364,7 @@ If you're still experiencing issues:
 
 1. **Check logs**: Review device logs and crash reports
 2. **Search issues**: Check the [GitHub issues](https://github.com/hyochan/expo-iap/issues)
-3. **Minimal reproduction**: Create a minimal example that reproduces the issue
+3. **Minimal reproduction**: Create a minimal example that reproduces the issue. See [this example](https://github.com/hyochan/expo-iap/issues/114) for reference on sharing a helpful repro
 4. **Report bug**: File a detailed issue with reproduction steps
 
 ### Bug report template

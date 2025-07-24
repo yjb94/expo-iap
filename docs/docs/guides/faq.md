@@ -381,6 +381,16 @@ For detailed migration guide and community support:
 3. Consider contributing to the project
 4. For urgent needs, you might need to use react-native-iap
 
+### What version of Xcode should I use for iOS development?
+
+**Use Xcode 16.4 or later** for the best experience with in-app purchases. Earlier versions have known issues that can cause:
+
+- Duplicate purchase events
+- Transaction handling errors
+- Unexpected StoreKit behavior
+
+These issues ([#114](https://github.com/hyochan/expo-iap/issues/114), [react-native-iap #2970](https://github.com/hyochan/react-native-iap/issues/2970)) have been resolved by upgrading to Xcode 16.4+.
+
 ## Troubleshooting
 
 ### My app crashes when making purchases
