@@ -9,13 +9,14 @@ import {
   initConnection,
   purchaseErrorListener,
   purchaseUpdatedListener,
+  promotedProductListenerIOS,
   getAvailablePurchases,
   getPurchaseHistories,
   finishTransaction as finishTransactionInternal,
   requestPurchase as requestPurchaseInternal,
   requestProducts,
 } from './';
-import {syncIOS, validateReceiptIOS} from './modules/ios';
+import {syncIOS, validateReceiptIOS, getPromotedProductIOS, buyPromotedProductIOS} from './modules/ios';
 import {validateReceiptAndroid} from './modules/android';
 
 // Types
@@ -35,11 +36,13 @@ type UseIap = {
   connected: boolean;
   products: Product[];
   promotedProductsIOS: ProductPurchase[];
+  promotedProductIdIOS?: string;
   subscriptions: SubscriptionProduct[];
   purchaseHistories: ProductPurchase[];
   availablePurchases: ProductPurchase[];
   currentPurchase?: ProductPurchase;
   currentPurchaseError?: PurchaseError;
+  promotedProductIOS?: Product;
   clearCurrentPurchase: () => void;
   clearCurrentPurchaseError: () => void;
   finishTransaction: ({
@@ -73,6 +76,8 @@ type UseIap = {
     },
   ) => Promise<any>;
   restorePurchases: () => Promise<void>; // 구매 복원 함수 추가
+  getPromotedProductIOS: () => Promise<any | null>;
+  buyPromotedProductIOS: () => Promise<void>;
 };
 
 export interface UseIAPOptions {
@@ -82,12 +87,13 @@ export interface UseIAPOptions {
   onPurchaseError?: (error: PurchaseError) => void;
   onSyncError?: (error: Error) => void;
   shouldAutoSyncPurchases?: boolean; // New option to control auto-syncing
+  onPromotedProductIOS?: (product: Product) => void;
 }
 
 export function useIAP(options?: UseIAPOptions): UseIap {
   const [connected, setConnected] = useState<boolean>(false);
   const [products, setProducts] = useState<Product[]>([]);
-  const [promotedProductsIOS, setPromotedProductsIOS] = useState<
+  const [promotedProductsIOS] = useState<
     ProductPurchase[]
   >([]);
   const [subscriptions, setSubscriptions] = useState<SubscriptionProduct[]>([]);
@@ -98,8 +104,10 @@ export function useIAP(options?: UseIAPOptions): UseIap {
     ProductPurchase[]
   >([]);
   const [currentPurchase, setCurrentPurchase] = useState<ProductPurchase>();
+  const [promotedProductIOS, setPromotedProductIOS] = useState<Product>();
   const [currentPurchaseError, setCurrentPurchaseError] =
     useState<PurchaseError>();
+  const [promotedProductIdIOS] = useState<string>();
 
   const optionsRef = useRef<UseIAPOptions | undefined>(options);
 
@@ -132,6 +140,7 @@ export function useIAP(options?: UseIAPOptions): UseIap {
     purchaseUpdate?: EventSubscription;
     purchaseError?: EventSubscription;
     promotedProductsIos?: EventSubscription;
+    promotedProductIOS?: EventSubscription;
   }>({});
 
   const subscriptionsRefState = useRef<SubscriptionProduct[]>([]);
@@ -151,7 +160,7 @@ export function useIAP(options?: UseIAPOptions): UseIap {
   const getProductsInternal = useCallback(
     async (skus: string[]): Promise<void> => {
       try {
-        const result = await requestProducts({ skus, type: 'inapp' });
+        const result = await requestProducts({skus, type: 'inapp'});
         setProducts((prevProducts) =>
           mergeWithDuplicateCheck(
             prevProducts,
@@ -169,7 +178,7 @@ export function useIAP(options?: UseIAPOptions): UseIap {
   const getSubscriptionsInternal = useCallback(
     async (skus: string[]): Promise<void> => {
       try {
-        const result = await requestProducts({ skus, type: 'subs' });
+        const result = await requestProducts({skus, type: 'subs'});
         setSubscriptions((prevSubscriptions) =>
           mergeWithDuplicateCheck(
             prevSubscriptions,
@@ -374,24 +383,15 @@ export function useIAP(options?: UseIAPOptions): UseIap {
       );
 
       if (Platform.OS === 'ios') {
-        // iOS promoted products are handled through regular purchase updates
-        subscriptionsRef.current.promotedProductsIos = purchaseUpdatedListener(
-          async (purchase: Purchase | SubscriptionPurchase) => {
-            // Add to promoted products if it's a promoted transaction (avoid duplicates)
-            setPromotedProductsIOS((prevProducts) =>
-              mergeWithDuplicateCheck(
-                prevProducts,
-                [purchase as ProductPurchase],
-                (product) => product.transactionId || product.id,
-              ),
-            );
-
-            // Refresh subscription status if it's a subscription purchase
-            if ('expirationDateIos' in purchase) {
-              await refreshSubscriptionStatus(purchase.id);
+        // iOS promoted products listener
+        subscriptionsRef.current.promotedProductsIos =
+          promotedProductListenerIOS((product: Product) => {
+            setPromotedProductIOS(product);
+            
+            if (optionsRef.current?.onPromotedProductIOS) {
+              optionsRef.current.onPromotedProductIOS(product);
             }
-          },
-        );
+          });
       }
     }
   }, [refreshSubscriptionStatus, mergeWithDuplicateCheck]);
@@ -404,6 +404,7 @@ export function useIAP(options?: UseIAPOptions): UseIap {
       currentSubscriptions.purchaseUpdate?.remove();
       currentSubscriptions.purchaseError?.remove();
       currentSubscriptions.promotedProductsIos?.remove();
+      currentSubscriptions.promotedProductIOS?.remove();
       endConnection();
       setConnected(false);
     };
@@ -413,12 +414,14 @@ export function useIAP(options?: UseIAPOptions): UseIap {
     connected,
     products,
     promotedProductsIOS,
+    promotedProductIdIOS,
     subscriptions,
     purchaseHistories,
     finishTransaction,
     availablePurchases,
     currentPurchase,
     currentPurchaseError,
+    promotedProductIOS,
     clearCurrentPurchase,
     clearCurrentPurchaseError,
     getAvailablePurchases: getAvailablePurchasesInternal,
@@ -429,5 +432,7 @@ export function useIAP(options?: UseIAPOptions): UseIap {
     restorePurchases,
     getProducts: getProductsInternal,
     getSubscriptions: getSubscriptionsInternal,
+    getPromotedProductIOS,
+    buyPromotedProductIOS,
   };
 }

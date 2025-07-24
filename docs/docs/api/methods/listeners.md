@@ -14,7 +14,7 @@ expo-iap provides event listeners to handle purchase updates and errors. These l
 
 ## purchaseUpdatedListener()
 
-Listens for purchase updates from the store.
+Listens for purchase updates from **the** store.
 
 ```tsx
 import {purchaseUpdatedListener} from 'expo-iap';
@@ -122,17 +122,17 @@ const handlePurchaseError = (error) => {
 
 **Returns:** Subscription object with `remove()` method
 
-## promotedProductListener() (iOS only)
+## promotedProductListenerIOS() (iOS only)
 
-Listens for promoted product purchases initiated from the App Store.
+Listens for promoted product purchases initiated from the App Store. This fires when a user taps on a promoted product in the App Store.
 
 ```tsx
-import {promotedProductListener} from 'expo-iap';
+import {promotedProductListenerIOS, getPromotedProductIOS, buyPromotedProductIOS} from 'expo-iap';
 
 const setupPromotedProductListener = () => {
-  const subscription = promotedProductListener((productId) => {
-    console.log('Promoted product purchase initiated:', productId);
-    handlePromotedProduct(productId);
+  const subscription = promotedProductListenerIOS((product) => {
+    console.log('Promoted product purchase initiated:', product);
+    handlePromotedProduct(product);
   });
 
   return () => {
@@ -142,19 +142,14 @@ const setupPromotedProductListener = () => {
   };
 };
 
-const handlePromotedProduct = async (productId) => {
+const handlePromotedProduct = async (product) => {
   try {
-    // Fetch the product details
-    const products = await requestProducts({ skus: [productId], type: 'inapp' });
-    const product = products[0];
+    // Show your custom purchase UI with the product details
+    const confirmed = await showProductConfirmation(product);
 
-    if (product) {
-      // Show product details to user and confirm purchase
-      const confirmed = await showProductConfirmation(product);
-
-      if (confirmed) {
-        await requestPurchase({sku: productId});
-      }
+    if (confirmed) {
+      // Complete the promoted purchase
+      await buyPromotedProductIOS();
     }
   } catch (error) {
     console.error('Error handling promoted product:', error);
@@ -165,9 +160,16 @@ const handlePromotedProduct = async (productId) => {
 **Parameters:**
 
 - `callback` (function): Function to call when a promoted product is selected
-  - `productId` (string): The ID of the promoted product
+  - `product` (Product): The promoted product object
 
 **Returns:** Subscription object with `remove()` method
+
+**Related Methods:**
+
+- `getPromotedProductIOS()`: Get the promoted product details
+- `buyPromotedProductIOS()`: Complete the promoted product purchase
+
+**Note:** This listener only works on iOS devices and is used for handling App Store promoted products.
 
 ## Using Listeners with React Hooks
 
