@@ -90,7 +90,7 @@ const {connected, getProducts} = useIAP();
 
 useEffect(() => {
   if (connected) {
-    requestProducts({ skus: ['com.yourapp.product1'], type: 'inapp' });
+    requestProducts({skus: ['com.yourapp.product1'], type: 'inapp'});
   }
 }, [connected]);
 ```
@@ -287,7 +287,7 @@ const getProductsWithCache = async (skus) => {
   const uncachedSkus = skus.filter((sku) => !cachedProducts[sku]);
 
   if (uncachedSkus.length > 0) {
-    const products = await requestProducts({ skus: uncachedSkus, type: 'inapp' });
+    const products = await requestProducts({skus: uncachedSkus, type: 'inapp'});
     // Cache the products
     setCachedProducts((prev) => ({
       ...prev,
@@ -481,6 +481,65 @@ const purchaseListener = purchaseUpdatedListener(async (purchase) => {
 
 - [GitHub Issue #56](https://github.com/hyochan/expo-iap/issues/56)
 - [react-native-iap Issue #2713](https://github.com/hyochan/react-native-iap/issues/2713)
+
+### [iOS] Build error: 'appTransactionID' property not found
+
+**Issue:** iOS build fails with errors like:
+
+- `Property 'appTransactionID' doesn't exist`
+- `Cannot find member 'appTransactionID' in AppTransaction`
+- `Property 'unit' is inaccessible due to 'internal' protection level` (yoga related)
+
+**Root Cause:** These errors occur due to package version mismatches. The `appTransactionID` field requires iOS 18.4+ SDK, but incompatible React Native or Expo versions may use older StoreKit headers.
+
+**Solution:** Check and use compatible versions of Expo SDK and React Native. For example:
+
+```json
+{
+  "dependencies": {
+    "expo": "~53.0.20",
+    "react-native": "0.79.5",
+    "expo-iap": "2.7.5"
+  }
+}
+```
+
+**Build with:**
+
+```bash
+eas build --profile development --platform ios --clear-cache
+```
+
+**Key Points:**
+
+- React Native 0.80.x is not yet fully compatible with some Expo modules
+- Use Expo SDK 53 with React Native 0.79.x for stability
+- Clear build cache when switching versions
+
+**If you still have issues:**
+
+1. Clear all caches:
+
+   ```bash
+   cd ios
+   pod deintegrate
+   pod install
+   ```
+
+2. Ensure EAS build uses correct Node version:
+
+   ```json
+   // eas.json
+   {
+     "build": {
+       "development": {
+         "node": "20.16.0"
+       }
+     }
+   }
+   ```
+
+**Related Issue:** [GitHub Issue #127](https://github.com/hyochan/expo-iap/issues/127)
 
 ## Still Need Help?
 
