@@ -81,11 +81,9 @@ Common causes:
 
 1. **Connection not established** - check `connected` state
 2. **Product IDs don't match** store configuration exactly (case-sensitive)
-3. **Products not yet approved/available** (iOS)
-4. **App not uploaded to store** (Android)
-5. **Testing on simulator/emulator** - real device required
-6. **iOS: Incomplete agreements** - Must complete Paid Applications Agreement, banking, tax, and compliance info
-7. **iOS: App not in TestFlight/Ready for Submission** - App must be beyond just "created" status
+3. **Products not yet approved/available** in store
+4. **Testing on simulator/emulator** - real device required
+5. **Store setup incomplete** - see platform-specific requirements below
 
 ```tsx
 const {connected, requestProducts} = useIAP();
@@ -97,20 +95,39 @@ useEffect(() => {
 }, [connected]);
 ```
 
-**iOS Specific Requirements:**
+**Platform-specific setup requirements:**
 
-- ✅ Complete Paid Applications Agreement in App Store Connect
-- ✅ Fill out all banking, tax, and compliance information
-- ✅ App must be in "Ready for Submission" or "TestFlight" status
-- ✅ In-app purchase products must be "Approved"
-- ✅ Use real device with sandbox/real Apple ID (not simulator)
-- ✅ Install app via TestFlight, not `expo run:ios`
+- **iOS**: See [iOS Setup Guide](/docs/getting-started/setup-ios)
+- **Android**: See [Android Setup Guide](/docs/getting-started/setup-android)
 
 **Still not working?**
 
-Sometimes App Store Connect simply doesn't return products even when everything seems correct. In this case:
+✅ **Common Checks:**
 
-⚠️ **Last Resort:** Delete and recreate your app + in-app purchase products from scratch in App Store Connect. This is painful but has resolved stubborn cases where nothing else worked.
+**iOS:**
+
+- Your App is in "Ready for Submission" or "TestFlight" status (not just created in App Store Connect)
+- The in-app purchase product is in "Approved" status
+- You are logged into the App Store on your test device with a real or sandbox Apple ID (not just simulator)
+- The app was installed via TestFlight, not `expo run:ios`
+- Your bundle ID matches exactly (including case sensitivity) between your app and App Store Connect
+- Product IDs are correct and match exactly in code
+- You called `initConnection()` before `requestProducts()`
+
+**Android:**
+
+- Create signed APK for your application
+- Upload your APK to Google Play Store (at least to internal testing track)
+- Create products in Google Play Console
+- Wait 6-12 hours for products to be available on the store
+- Billing permissions are automatically handled by expo-iap (no manual Manifest.xml edit needed)
+- **Don't use emulator** - it doesn't support Google Play Billing Services, use a real device
+
+🛠 **Worst-Case Scenario:**
+
+Sometimes, even if everything seems correct, App Store Connect simply doesn't return products. In that case, the only thing that works is:
+
+❌ **Delete and recreate your app + in-app purchase product from scratch.**
 
 ### Can I purchase products without calling `requestProducts()` first?
 
@@ -483,31 +500,57 @@ const purchaseListener = purchaseUpdatedListener(async (purchase) => {
 - `Cannot find member 'appTransactionID' in AppTransaction`
 - `Property 'unit' is inaccessible due to 'internal' protection level` (yoga related)
 
-**Root Cause:** These errors occur due to package version mismatches. The `appTransactionID` field requires iOS 18.4+ SDK, but incompatible React Native or Expo versions may use older StoreKit headers.
+**Root Cause:** The `appTransactionID` field was introduced in iOS 18.4+ SDK. This error occurs when:
 
-**Solution:** Check and use compatible versions of Expo SDK and React Native. For example:
+- Using Xcode < 16.4 (which doesn't include iOS 18.4 SDK)
+- iOS SDK version < 18.4
+- Version mismatches between expo-iap, React Native, and Expo SDK
 
-```json
-{
-  "dependencies": {
-    "expo": "~53.0.20",
-    "react-native": "0.79.5",
-    "expo-iap": "2.7.5"
-  }
-}
-```
+**Solutions:**
 
-**Build with:**
+1. **Upgrade Xcode to 16.4 or later** (recommended):
+
+   ````bash
+   # Check your current versions
+   xcodebuild -version
+   xcrun --show-sdk-version
+   ```
+
+   Required: Xcode 16.4+ with iOS SDK 18.4+
+
+   ````
+
+2. **Use compatible package versions**:
+
+   ```json
+   {
+     "dependencies": {
+       "expo": "~53.0.20",
+       "react-native": "0.79.5",
+       "expo-iap": "2.7.5"
+     }
+   }
+   ```
+
+3. **If you can't upgrade Xcode, downgrade expo-iap**:
+
+   ```bash
+   npm install expo-iap@2.5.3
+   ```
+
+   Note: Versions 2.5.1-2.5.3 work without iOS 18.4 SDK
+
+**Build with EAS:**
 
 ```bash
 eas build --profile development --platform ios --clear-cache
 ```
 
-**Key Points:**
+**Important Compatibility Notes:**
 
-- React Native 0.80.x is not yet fully compatible with some Expo modules
-- Use Expo SDK 53 with React Native 0.79.x for stability
-- Clear build cache when switching versions
+- expo-iap 2.7.4+ fixed the SDK version detection but still requires iOS 15.0+ deployment target
+- React Native 0.80.x may have compatibility issues with some Expo modules
+- Expo SDK 53 with React Native 0.79.x is more stable for production
 
 **If you still have issues:**
 
@@ -515,6 +558,7 @@ eas build --profile development --platform ios --clear-cache
 
    ```bash
    cd ios
+   rm -rf ~/Library/Developer/Xcode/DerivedData
    pod deintegrate
    pod install
    ```
@@ -532,7 +576,30 @@ eas build --profile development --platform ios --clear-cache
    }
    ```
 
-**Related Issue:** [GitHub Issue #127](https://github.com/hyochan/expo-iap/issues/127)
+3. Set minimum iOS deployment target to 15.0:
+
+   ```json
+   // app.json or app.config.js
+   {
+     "expo": {
+       "plugins": [
+         [
+           "expo-build-properties",
+           {
+             "ios": {
+               "deploymentTarget": "15.0"
+             }
+           }
+         ]
+       ]
+     }
+   }
+   ```
+
+**Related Issues:**
+
+- [GitHub Issue #114](https://github.com/hyochan/expo-iap/issues/114)
+- [GitHub Issue #127](https://github.com/hyochan/expo-iap/issues/127)
 
 #### Sandbox prices showing in wrong currency/localization
 

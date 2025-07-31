@@ -70,7 +70,8 @@ Before testing in-app purchases on iOS, you must:
 - ✅ Create and approve in-app purchase products
 - ✅ Set up sandbox test accounts
 
-:::warning Products won't be available for testing until all agreements are signed and your app is in "Ready for Submission" or "TestFlight" status. :::
+- Products won't be available for testing until all agreements are signed and your app is in "Ready for Submission" or "TestFlight" status
+- Use real device with sandbox/real Apple ID (not simulator)
 
 ### Android Configuration
 
@@ -101,8 +102,6 @@ Before testing in-app purchases on Android, you must:
 - ✅ Create in-app products in Google Play Console
 - ✅ Wait 6-12 hours for products to propagate after initial upload
 - ✅ Add test accounts to your testing track
-
-:::warning
 
 - Use real device for testing - emulators don't support Google Play Billing
 
