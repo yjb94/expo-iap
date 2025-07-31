@@ -203,8 +203,8 @@ const handlePurchaseError = (error) => {
 
     default:
       // Log for investigation
-      console.error('Purchase error:', error);
-      break;
+      console.error('Purchase error:', error);**
+**      break;
   }
 };
 ```
@@ -391,35 +391,11 @@ For detailed migration guide and community support:
 
 These issues ([#114](https://github.com/hyochan/expo-iap/issues/114), [react-native-iap #2970](https://github.com/hyochan/react-native-iap/issues/2970)) have been resolved by upgrading to Xcode 16.4+.
 
-## Troubleshooting
+## Platform-Specific Issues
 
-### My app crashes when making purchases
+### iOS Issues
 
-Common causes:
-
-- Not handling purchase updates properly
-- Memory leaks from not cleaning up listeners
-- Trying to finish transactions multiple times
-
-### Purchases are successful but features aren't unlocked
-
-This usually indicates:
-
-- Receipt validation is failing
-- Purchase handling logic has bugs
-- Database/state updates are not working
-
-Check your server logs and purchase handling code.
-
-### I get "Item already owned" errors
-
-This happens when:
-
-- Trying to purchase a non-consumable product again
-- Previous transaction wasn't finished properly
-- Need to restore purchases instead
-
-### [iOS] purchaseUpdatedListener is called twice after finishTransaction
+#### purchaseUpdatedListener is called twice after finishTransaction
 
 **Issue:** On iOS, `purchaseUpdatedListener` may be called twice for the same transaction when using `andDangerouslyFinishTransactionAutomaticallyIOS: false` and manually calling `finishTransaction()`.
 
@@ -482,7 +458,7 @@ const purchaseListener = purchaseUpdatedListener(async (purchase) => {
 - [GitHub Issue #56](https://github.com/hyochan/expo-iap/issues/56)
 - [react-native-iap Issue #2713](https://github.com/hyochan/react-native-iap/issues/2713)
 
-### [iOS] Build error: 'appTransactionID' property not found
+#### Build error: 'appTransactionID' property not found
 
 **Issue:** iOS build fails with errors like:
 
@@ -540,6 +516,105 @@ eas build --profile development --platform ios --clear-cache
    ```
 
 **Related Issue:** [GitHub Issue #127](https://github.com/hyochan/expo-iap/issues/127)
+
+#### Sandbox prices showing in wrong currency/localization
+
+**Issue:** During TestFlight testing, users see prices in USD instead of their local currency (e.g., EUR) in the initial purchase dialog. The correct currency only appears after proceeding to the next step.
+
+**Explanation:** This is normal iOS sandbox behavior and not related to expo-iap. The same behavior occurs with other IAP libraries like RevenueCat.
+
+**Key Points:**
+
+- This only happens in sandbox/TestFlight environments
+- Production builds will show correct localized prices immediately
+- It's an Apple sandbox limitation, not a configuration issue
+
+**Related Issue:** [GitHub Issue #126](https://github.com/hyochan/expo-iap/issues/126)
+
+### Android Issues
+
+#### Build error: kspVersion not defined and Kotlin version conflicts
+
+**Issue:** After upgrading to expo-iap v2.7.0+, Android builds fail with errors like:
+- `kspVersion not being explicitly defined`
+- Plugin conflicts between `com.android.library` and `com.android.application`
+- Kotlin compatibility errors with other packages
+
+**Root Cause:** Starting with expo-iap v2.7.0, Google Play Billing Library v8.0.0 is used, which requires Kotlin 2.0+. However, expo-modules-core doesn't support Kotlin 2.x by default yet.
+
+**Solution:** You must define the Kotlin version explicitly using expo-build-properties:
+
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "2.0.21"
+          }
+        }
+      ]
+    ]
+  }
+}
+```
+
+**Common Follow-up Issues:**
+
+If you have other packages (like `@notifee/react-native`) that rely on Kotlin < 2.0, you may encounter this error:
+
+```
+Could not find org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:1.9.25
+```
+
+This happens because:
+- The billing-ktx package in Google Play Billing v8 is compiled with Kotlin 2.0
+- It generates metadata version 2.1.0
+- Projects using Kotlin 1.9.x cannot parse this metadata
+
+**The error message:**
+```
+META-INF/.../ktbilling_granule.kotlin_module
+was compiled with an incompatible version of Kotlin.
+The binary version of its metadata is 2.1.0, expected version is 1.9.0.
+```
+
+**Resolution Options:**
+1. Upgrade all your packages to be compatible with Kotlin 2.0+
+2. Wait for expo-modules-core to officially support Kotlin 2.x
+3. Consider staying on expo-iap v2.6.x if you cannot upgrade Kotlin
+
+**Related Issues:** [GitHub Issue #85](https://github.com/hyochan/expo-iap/issues/85)
+
+## General Troubleshooting
+
+### My app crashes when making purchases
+
+Common causes:
+
+- Not handling purchase updates properly
+- Memory leaks from not cleaning up listeners
+- Trying to finish transactions multiple times
+
+### Purchases are successful but features aren't unlocked
+
+This usually indicates:
+
+- Receipt validation is failing
+- Purchase handling logic has bugs
+- Database/state updates are not working
+
+Check your server logs and purchase handling code.
+
+### I get "Item already owned" errors
+
+This happens when:
+
+- Trying to purchase a non-consumable product again
+- Previous transaction wasn't finished properly
+- Need to restore purchases instead
 
 ## Still Need Help?
 
