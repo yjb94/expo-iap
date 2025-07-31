@@ -79,14 +79,16 @@ Yes, you need to:
 
 Common causes:
 
-1. Connection not established - check `connected` state
-2. Product IDs don't match store configuration exactly
-3. Products not yet approved/available (iOS)
-4. App not uploaded to store (Android)
-5. Testing on simulator/emulator
+1. **Connection not established** - check `connected` state
+2. **Product IDs don't match** store configuration exactly (case-sensitive)
+3. **Products not yet approved/available** (iOS)
+4. **App not uploaded to store** (Android)
+5. **Testing on simulator/emulator** - real device required
+6. **iOS: Incomplete agreements** - Must complete Paid Applications Agreement, banking, tax, and compliance info
+7. **iOS: App not in TestFlight/Ready for Submission** - App must be beyond just "created" status
 
 ```tsx
-const {connected, getProducts} = useIAP();
+const {connected, requestProducts} = useIAP();
 
 useEffect(() => {
   if (connected) {
@@ -94,6 +96,21 @@ useEffect(() => {
   }
 }, [connected]);
 ```
+
+**iOS Specific Requirements:**
+
+- ✅ Complete Paid Applications Agreement in App Store Connect
+- ✅ Fill out all banking, tax, and compliance information
+- ✅ App must be in "Ready for Submission" or "TestFlight" status
+- ✅ In-app purchase products must be "Approved"
+- ✅ Use real device with sandbox/real Apple ID (not simulator)
+- ✅ Install app via TestFlight, not `expo run:ios`
+
+**Still not working?**
+
+Sometimes App Store Connect simply doesn't return products even when everything seems correct. In this case:
+
+⚠️ **Last Resort:** Delete and recreate your app + in-app purchase products from scratch in App Store Connect. This is painful but has resolved stubborn cases where nothing else worked.
 
 ### Can I purchase products without calling `requestProducts()` first?
 
@@ -536,6 +553,7 @@ eas build --profile development --platform ios --clear-cache
 #### Build error: kspVersion not defined and Kotlin version conflicts
 
 **Issue:** After upgrading to expo-iap v2.7.0+, Android builds fail with errors like:
+
 - `kspVersion not being explicitly defined`
 - Plugin conflicts between `com.android.library` and `com.android.application`
 - Kotlin compatibility errors with other packages
@@ -565,23 +583,26 @@ eas build --profile development --platform ios --clear-cache
 
 If you have other packages (like `@notifee/react-native`) that rely on Kotlin < 2.0, you may encounter this error:
 
-```
+```sh
 Could not find org.jetbrains.kotlin:kotlin-compose-compiler-plugin-embeddable:1.9.25
 ```
 
 This happens because:
+
 - The billing-ktx package in Google Play Billing v8 is compiled with Kotlin 2.0
 - It generates metadata version 2.1.0
 - Projects using Kotlin 1.9.x cannot parse this metadata
 
 **The error message:**
-```
+
+```sh
 META-INF/.../ktbilling_granule.kotlin_module
 was compiled with an incompatible version of Kotlin.
 The binary version of its metadata is 2.1.0, expected version is 1.9.0.
 ```
 
 **Resolution Options:**
+
 1. Upgrade all your packages to be compatible with Kotlin 2.0+
 2. Wait for expo-modules-core to officially support Kotlin 2.x
 3. Consider staying on expo-iap v2.6.x if you cannot upgrade Kotlin

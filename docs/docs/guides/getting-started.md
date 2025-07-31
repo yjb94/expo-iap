@@ -59,6 +59,19 @@ For iOS projects, you need to configure StoreKit capabilities:
 3. Go to "Signing & Capabilities" tab
 4. Click "+" and add "In-App Purchase" capability
 
+**App Store Connect Requirements:**
+
+Before testing in-app purchases on iOS, you must:
+
+- ✅ Complete Paid Applications Agreement
+- ✅ Fill out banking, tax, and compliance information
+- ✅ Create your app in App Store Connect
+- ✅ Upload at least one build to TestFlight
+- ✅ Create and approve in-app purchase products
+- ✅ Set up sandbox test accounts
+
+:::warning Products won't be available for testing until all agreements are signed and your app is in "Ready for Submission" or "TestFlight" status. :::
+
 ### Android Configuration
 
 For Android, ensure your app is configured for Google Play Billing:
@@ -78,6 +91,20 @@ dependencies {
     implementation 'com.android.billingclient:billing:5.0.0'
 }
 ```
+
+**Google Play Console Requirements:**
+
+Before testing in-app purchases on Android, you must:
+
+- ✅ Create signed APK/AAB build
+- ✅ Upload your app to any testing track (internal/closed/open)
+- ✅ Create in-app products in Google Play Console
+- ✅ Wait 6-12 hours for products to propagate after initial upload
+- ✅ Add test accounts to your testing track
+
+:::warning
+
+- Use real device for testing - emulators don't support Google Play Billing
 
 ## Quick Start
 
@@ -121,7 +148,7 @@ const productIds = [
 
 useEffect(() => {
   if (connected) {
-    requestProducts({ skus: productIds, type: 'inapp' });
+    requestProducts({skus: productIds, type: 'inapp'});
   }
 }, [connected, requestProducts]);
 ```
@@ -138,9 +165,9 @@ const handlePurchase = async (productId: string) => {
     // Platform-specific purchase request (v2.7.0+)
     await requestPurchase({
       request: {
-        ios: { sku: productId },
-        android: { skus: [productId] }
-      }
+        ios: {sku: productId},
+        android: {skus: [productId]},
+      },
     });
   } catch (error) {
     console.error('Purchase failed:', error);
@@ -155,6 +182,7 @@ This platform difference exists because iOS can only purchase one product at a t
 The `useIAP` hook automatically handles purchase updates. When a purchase is successful, you should validate the receipt on your server and then finish the transaction.
 
 **Important**: Receipt validation also has platform-specific requirements:
+
 - **iOS**: Only needs the receipt data
 - **Android**: Requires `packageName`, `purchaseToken`, and optionally `accessToken`
 
@@ -174,25 +202,27 @@ useEffect(() => {
           // Android: Check required parameters first
           const purchaseToken = currentPurchase.purchaseTokenAndroid;
           const packageName = currentPurchase.packageNameAndroid;
-          
+
           if (!purchaseToken || !packageName) {
-            throw new Error('Android validation requires packageName and purchaseToken');
+            throw new Error(
+              'Android validation requires packageName and purchaseToken',
+            );
           }
-          
+
           await validateReceiptOnServer({
             packageName,
             purchaseToken,
             productId: currentPurchase.productId,
           });
         }
-        
+
         // If validation successful, finish the transaction
         await finishTransaction({purchase: currentPurchase});
       } catch (error) {
         console.error('Receipt validation failed:', error);
       }
     };
-    
+
     validateAndFinish();
   }
 }, [currentPurchase, finishTransaction]);
