@@ -57,6 +57,13 @@ export default function Home() {
           </TouchableOpacity>
         </Link>
 
+        <Link href="/available-purchases" asChild>
+          <TouchableOpacity style={[styles.button, styles.quaternaryButton]}>
+            <Text style={styles.buttonText}>📦 Available Purchases</Text>
+            <Text style={styles.buttonSubtext}>View past purchases</Text>
+          </TouchableOpacity>
+        </Link>
+
         <Link href="/offer-code" asChild>
           <TouchableOpacity style={[styles.button, styles.tertiaryButton]}>
             <Text style={styles.buttonText}>🎁 Offer Code Redemption</Text>
@@ -121,6 +128,9 @@ const styles = StyleSheet.create({
   },
   tertiaryButton: {
     backgroundColor: '#6c757d',
+  },
+  quaternaryButton: {
+    backgroundColor: '#9c27b0',
   },
   buttonText: {
     color: 'black',

@@ -12,6 +12,10 @@ export default function RootLayout() {
         name="subscription-flow"
         options={{title: 'Subscription Flow'}}
       />
+      <Stack.Screen
+        name="available-purchases"
+        options={{title: 'Available Purchases'}}
+      />
     </Stack>
   );
 }

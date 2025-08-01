@@ -107,8 +107,9 @@ export const promotedProductListenerIOS = (
   return emitter.addListener(IapEvent.PromotedProductIOS, listener);
 };
 
-export function initConnection() {
-  return ExpoIapModule.initConnection();
+export function initConnection(): Promise<boolean> {
+  const result = ExpoIapModule.initConnection();
+  return Promise.resolve(result);
 }
 
 export const getProducts = async (skus: string[]): Promise<Product[]> => {
