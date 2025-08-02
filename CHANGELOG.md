@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.7.7] - TBD
+## [2.7.7]
 
 ### Fixed
 
