@@ -1,9 +1,9 @@
 # Expo IAP
 
-| In app purchase module in [Expo](https://docs.expo.dev/guides/in-app-purchases)
-
-<div>
-  <img src="https://github.com/user-attachments/assets/3257a1e0-800b-441b-8522-94c35ce751d2" width="400" />
+<div align="center">
+  <img src="https://expo-iap.hyo.dev/img/icon.png" alt="Expo IAP Logo" width="150" />
+  <h1>Expo IAP</h1>
+  <p>In app purchase module in <a href="https://docs.expo.dev/guides/in-app-purchases">Expo</a></p>
 </div>
 
 [![Version](http://img.shields.io/npm/v/expo-iap.svg?style=flat-square)](https://npmjs.org/package/expo-iap) [![Download](http://img.shields.io/npm/dm/expo-iap.svg?style=flat-square)](https://npmjs.org/package/expo-iap) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhyochan%2Fexpo-iap.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhyochan%2Fexpo-iap?ref=badge_shield&issueType=license)
@@ -19,7 +19,7 @@
 - [🎣 useIAP Hook API](https://expo-iap.hyo.dev/docs/api/use-iap)
 - [⚠️ Error Codes](https://expo-iap.hyo.dev/docs/api/error-codes)
 
-# Notice
+## Notice
 
 The `expo-iap` module has been migrated from [react-native-iap](https://github.com/dooboolab/react-native-iap). Moving forward, the `react-native-iap` repository will gradually be deprecated, and `expo-iap` will become the actively maintained module. Please take note of this transition. For more details, refer to the [Future Roadmap and Discussion in react-native-iap](https://github.com/dooboolab-community/react-native-iap/discussions/2754). Additionally, you can check the [Current Project Status comment](https://github.com/dooboolab-community/react-native-iap/discussions/2754#discussioncomment-10510249) to stay updated on the project's progress.
 
@@ -74,4 +74,4 @@ For detailed usage examples and error handling, see the [documentation](https://
 
 ## Past Sponsors
 
-<a href="https://namiml.com"><img src="https://github.com/hyochan/react-native-iap/assets/27461460/89d71f61-bb73-400a-83bd-fe0f96eb726e" width="280"/></a>
+<a href="https://namiml.com"><img src="https://github.com/hyochan/react-native-iap/assets/27461460/89d71f61-bb73-400a-83bd-fe0f96eb726e" alt="Nami ML" width="280"/></a>
