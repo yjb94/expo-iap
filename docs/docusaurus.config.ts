@@ -80,7 +80,7 @@ const config: Config = {
 
   themeConfig: {
     // Replace with your project's social card
-    image: 'img/hero.png',
+    image: 'img/icon.png',
     navbar: {
       title: 'Expo IAP',
       logo: {
