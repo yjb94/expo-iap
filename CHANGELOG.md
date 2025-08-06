@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.7.9]
+
+### Fixed
+
+- Fixed `acknowledgePurchaseAndroid` argument mismatch error by removing unused `developerPayload` parameter
+
 ## [2.7.8]
 
 ### Added
