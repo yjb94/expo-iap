@@ -156,7 +156,7 @@ Users cannot cancel subscriptions within your app. You need to direct them to th
 import {deepLinkToSubscriptions} from 'expo-iap';
 
 const openSubscriptionManagement = () => {
-  deepLinkToSubscriptions();
+  deepLinkToSubscriptions({ skuAndroid: 'your_subscription_sku' });
 };
 ```
 

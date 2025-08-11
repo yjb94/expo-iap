@@ -612,7 +612,7 @@ import {deepLinkToSubscriptions} from 'expo-iap';
 
 const openSubscriptionSettings = () => {
   try {
-    deepLinkToSubscriptions();
+    deepLinkToSubscriptions({ skuAndroid: 'your_subscription_sku' });
   } catch (error) {
     console.error('Failed to open subscription settings:', error);
   }

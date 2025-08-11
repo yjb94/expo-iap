@@ -4,8 +4,16 @@ import {Platform} from 'react-native';
 
 // Internal modules
 import ExpoIapModule from './ExpoIapModule';
-import {isProductIos, validateReceiptIOS} from './modules/ios';
-import {isProductAndroid, validateReceiptAndroid} from './modules/android';
+import {
+  isProductIos,
+  validateReceiptIOS,
+  deepLinkToSubscriptionsIos,
+} from './modules/ios';
+import {
+  isProductAndroid,
+  validateReceiptAndroid,
+  deepLinkToSubscriptionsAndroid,
+} from './modules/android';
 
 // Types
 import {
@@ -692,6 +700,37 @@ export const validateReceipt = async (
   } else {
     throw new Error('Platform not supported');
   }
+};
+
+/**
+ * Deeplinks to native interface that allows users to manage their subscriptions
+ * @param options.skuAndroid - Required for Android to locate specific subscription (ignored on iOS)
+ * 
+ * @returns Promise that resolves when the deep link is successfully opened
+ * 
+ * @throws {Error} When called on unsupported platform or when `skuAndroid` is missing on Android
+ * 
+ * @example
+ * import { deepLinkToSubscriptions } from 'expo-iap';
+ * 
+ * // Works on both iOS and Android
+ * await deepLinkToSubscriptions({ skuAndroid: 'your_subscription_sku' });
+ */
+export const deepLinkToSubscriptions = (options: {skuAndroid: string}): Promise<void> => {
+  if (Platform.OS === 'ios') {
+    return deepLinkToSubscriptionsIos();
+  }
+
+  if (Platform.OS === 'android') {
+    if (!options.skuAndroid) {
+      return Promise.reject(
+        new Error('SKU is required to locate subscription in Android Store'),
+      );
+    }
+    return deepLinkToSubscriptionsAndroid({sku: options.skuAndroid});
+  }
+
+  return Promise.reject(new Error(`Unsupported platform: ${Platform.OS}`));
 };
 
 export * from './useIap';

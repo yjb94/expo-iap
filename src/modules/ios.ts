@@ -12,6 +12,7 @@ import {
   SubscriptionPurchase,
 } from '../ExpoIap.types';
 import type {ProductStatusIos, AppTransactionIOS} from '../types/ExpoIapIos.types';
+import { Linking } from 'react-native';
 
 export type TransactionEvent = {
   transaction?: ProductPurchase;
@@ -303,6 +304,15 @@ export const getPromotedProductIOS = (): Promise<any | null> => {
 export const buyPromotedProductIOS = (): Promise<void> => {
   return ExpoIapModule.buyPromotedProduct();
 };
+
+/**
+ * Deep link to subscriptions screen on iOS.
+ * @returns {Promise<void>}
+ *
+ * @platform iOS
+ */
+export const deepLinkToSubscriptionsIos = (): Promise<void> =>
+  Linking.openURL('https://apps.apple.com/account/subscriptions');
 
 // ============= DEPRECATED FUNCTIONS =============
 // These will be removed in version 3.0.0

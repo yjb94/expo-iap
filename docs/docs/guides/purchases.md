@@ -951,7 +951,7 @@ import {deepLinkToSubscriptions} from 'expo-iap';
 
 const openSubscriptionManagement = () => {
   // This opens the platform-specific subscription management UI
-  deepLinkToSubscriptions();
+  deepLinkToSubscriptions({ skuAndroid: 'your_subscription_sku' });
 };
 ```
 

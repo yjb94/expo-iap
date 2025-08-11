@@ -325,7 +325,7 @@ export default function SubscriptionManager() {
 
   const openSubscriptionManagement = () => {
     import('expo-iap').then(({deepLinkToSubscriptions}) => {
-      deepLinkToSubscriptions();
+      deepLinkToSubscriptions({ skuAndroid: 'your_subscription_sku' });
     });
   };
 
