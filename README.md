@@ -1,31 +1,14 @@
 # Expo IAP
 
-<div align="center">
-  <img src="https://expo-iap.hyo.dev/img/icon.png" alt="Expo IAP Logo" width="150" />
-  <h1>Expo IAP</h1>
-  <p>In app purchase module in <a href="https://docs.expo.dev/guides/in-app-purchases">Expo</a> that conforms to the <a href="https://openiap.dev">Open IAP specification</a></p>
-</div>
+<img src="https://expo-iap.hyo.dev/img/icon.png" alt="Expo IAP Logo" width="150" />
 
 [![Version](http://img.shields.io/npm/v/expo-iap.svg?style=flat-square)](https://npmjs.org/package/expo-iap) [![Download](http://img.shields.io/npm/dm/expo-iap.svg?style=flat-square)](https://npmjs.org/package/expo-iap) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhyochan%2Fexpo-iap.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhyochan%2Fexpo-iap?ref=badge_shield&issueType=license)
+
+In app purchase module in [Expo](https://docs.expo.dev/guides/in-app-purchases) that conforms to the [Open IAP specification](https://openiap.dev)
 
 ## 📚 Documentation
 
 **[📖 Visit our comprehensive documentation site →](https://expo-iap.hyo.dev)**
-
-### Implementation
-
-- [🚀 Quick Start Guide](https://expo-iap.hyo.dev/docs/intro)
-- [💽 Installation](https://expo-iap.hyo.dev/docs/installation)
-- [🎣 useIAP Hook API](https://expo-iap.hyo.dev/docs/api/use-iap)
-- [⚠️ Error Codes](https://expo-iap.hyo.dev/docs/api/error-codes)
-
-### Setup & Lifecycle
-
-- [📱 Lifecycle](https://openiap.dev/docs/lifecycle) - Complete purchase flow
-- [🍎 iOS Setup](https://openiap.dev/docs/ios-setup) - App Store configuration
-- [🤖 Android Setup](https://openiap.dev/docs/android-setup) - Google Play configuration
-
-![Purchase Flow](https://openiap.dev/purchase-flow.png)
 
 ## Notice
 
