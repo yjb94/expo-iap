@@ -27,8 +27,8 @@ export default function SubscriptionFlow() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Use the useIAP hook for managing subscriptions
-  const {connected, subscriptions, requestProducts} = useIAP({
-    onPurchaseSuccess: (purchase) => {
+  const {connected, subscriptions, requestProducts, finishTransaction} = useIAP({
+    onPurchaseSuccess: async (purchase) => {
       console.log('Subscription successful:', purchase);
       setIsProcessing(false);
 
@@ -40,6 +40,22 @@ export default function SubscriptionFlow() {
           `Date: ${new Date(purchase.transactionDate).toLocaleDateString()}\n` +
           `Receipt: ${purchase.transactionReceipt?.substring(0, 50)}...`,
       );
+
+      // IMPORTANT: Server-side receipt validation should be performed here
+      // Send the receipt to your backend server for validation
+      // Example:
+      // const isValid = await validateReceiptOnServer(purchase.transactionReceipt);
+      // if (!isValid) {
+      //   Alert.alert('Error', 'Receipt validation failed');
+      //   return;
+      // }
+
+      // After successful server validation, finish the transaction
+      // For subscriptions, isConsumable should be false (subscriptions are non-consumable)
+      await finishTransaction({
+        purchase,
+        isConsumable: false, // Set to false for subscriptions
+      });
 
       Alert.alert('Success', 'Subscription activated successfully!');
     },

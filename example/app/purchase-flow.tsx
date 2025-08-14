@@ -32,8 +32,8 @@ export default function PurchaseFlow() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Use the useIAP hook for managing purchases
-  const {connected, products, requestProducts} = useIAP({
-    onPurchaseSuccess: (purchase: ProductPurchase) => {
+  const {connected, products, requestProducts, finishTransaction} = useIAP({
+    onPurchaseSuccess: async (purchase: ProductPurchase) => {
       console.log('Purchase successful:', purchase);
       setIsProcessing(false);
 
@@ -45,6 +45,22 @@ export default function PurchaseFlow() {
           `Date: ${new Date(purchase.transactionDate).toLocaleDateString()}\n` +
           `Receipt: ${purchase.transactionReceipt?.substring(0, 50)}...`,
       );
+
+      // IMPORTANT: Server-side receipt validation should be performed here
+      // Send the receipt to your backend server for validation
+      // Example:
+      // const isValid = await validateReceiptOnServer(purchase.transactionReceipt);
+      // if (!isValid) {
+      //   Alert.alert('Error', 'Receipt validation failed');
+      //   return;
+      // }
+
+      // After successful server validation, finish the transaction
+      // For consumable products (like bulb packs), set isConsumable to true
+      await finishTransaction({
+        purchase,
+        isConsumable: true, // Set to true for consumable products
+      });
 
       Alert.alert('Success', 'Purchase completed successfully!');
     },
