@@ -10,22 +10,20 @@ import AdFitTopFixed from "@site/src/uis/AdFitTopFixed";
 
 <AdFitTopFixed />
 
-Understanding the lifecycle of in-app purchase connections and how to properly manage them is crucial for a robust implementation.
+For complete understanding of the in-app purchase lifecycle, flow diagrams, and state management, please visit:
 
-![Lifecycle Diagram](/img/lifecycle.svg)
+👉 **[Lifecycle Documentation - openiap.dev](https://openiap.dev/docs/lifecycle)**
 
-## Lifecycle Overview
+![Purchase Flow](https://openiap.dev/purchase-flow.png)
 
-The diagram above illustrates the complete lifecycle of in-app purchases in expo-iap:
+The Open IAP specification provides detailed documentation on:
+- Complete purchase flow
+- State transitions and management  
+- Connection lifecycle
+- Error recovery patterns
+- Platform-specific considerations
 
-1. **Initialization**: Connection to the store is established
-2. **Product Fetching**: Available products are retrieved from the store
-3. **Purchase Request**: User initiates a purchase
-4. **Purchase Processing**: The store processes the payment
-5. **Purchase Update**: Your app receives purchase notifications
-6. **Validation**: Receipt validation (should be done server-side)
-7. **Transaction Finishing**: Complete the transaction to finalize the purchase
-8. **Connection Management**: Proper cleanup when needed
+## Implementation with expo-iap
 
 ## Connection Management with useIAP
 

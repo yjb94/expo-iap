@@ -8,7 +8,9 @@ import AdFitTopFixed from "@site/src/uis/AdFitTopFixed";
 
 <AdFitTopFixed />
 
-**Expo IAP** is a powerful in-app purchase solution for Expo and React Native applications. It provides a unified API for handling in-app purchases across iOS and Android platforms with comprehensive error h### 📚 Guides
+**Expo IAP** is a powerful in-app purchase solution for Expo and React Native applications that **conforms to the [Open IAP specification](https://openiap.dev)**. It provides a unified API for handling in-app purchases across iOS and Android platforms with comprehensive error handling and modern TypeScript support.
+
+## 📚 Guides
 
 - [**Getting Started**](./guides/getting-started): Complete guide to implementing in-app purchases
 - [**Purchase Lifecycle**](./guides/lifecycle): Understanding connection management and best practices

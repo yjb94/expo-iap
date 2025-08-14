@@ -8,115 +8,17 @@ import AdFitTopFixed from "@site/src/uis/AdFitTopFixed";
 
 <AdFitTopFixed />
 
-Setting up in-app purchases for iOS requires configuration in both Xcode and App Store Connect.
+For complete iOS setup instructions including App Store Connect configuration, Xcode setup, and testing guidelines, please visit:
 
-## Prerequisites
+👉 **[iOS Setup Guide - openiap.dev](https://openiap.dev/docs/ios-setup)**
 
-Before you can successfully implement and test in-app purchases, you must complete these essential steps in App Store Connect:
+The guide covers:
+- App Store Connect configuration
+- Xcode project setup
+- Sandbox testing
+- Common troubleshooting steps
 
-### 1. Sign All Agreements
-
-1. Sign in to [App Store Connect](https://appstoreconnect.apple.com/)
-2. Navigate to **Business** section
-3. **Sign ALL pending agreements** - This is crucial!
-4. If agreements are not signed, products won't appear in your app
-
-### 2. Complete Banking, Legal, and Tax Information
-
-1. Go to **Business** > **Banking**
-2. Fill out **ALL** required banking information
-3. Complete **ALL** legal and tax forms
-4. **Wait for Apple's approval** - This can take several days
-5. Products will not be available until Apple approves all information
-
-> ⚠️ **Important**: These prerequisites are often overlooked but are absolutely essential. Without completing these steps, your products will not be found, even if everything else is configured correctly.
-
-## App Store Connect Configuration
-
-### 1. Create Your App Record
-
-1. Sign in to [App Store Connect](https://appstoreconnect.apple.com/)
-2. Navigate to "My Apps"
-3. Create a new app or select your existing app
-4. Fill in the required app information
-
-### 2. Create In-App Purchase Products
-
-1. In your app's page, go to **Features** > **In-App Purchases**
-2. Click the **+** button to create a new product
-3. Choose your product type:
-   - **Consumable**: Can be purchased multiple times (coins, lives, etc.)
-   - **Non-Consumable**: One-time purchase (premium features)
-   - **Auto-Renewable Subscription**: Recurring subscription
-   - **Non-Renewable Subscription**: Time-limited subscription
-
-### 3. Configure Product Details
-
-For each product, provide:
-
-- **Product ID**: Unique identifier (e.g., `com.yourapp.premium`)
-- **Reference Name**: Internal name for your team
-- **Pricing**: Select price tier or custom pricing
-- **Display Name**: Name shown to users
-- **Description**: Product description for users
-
-### 4. Submit for Review
-
-- Add product screenshot (1024x1024px)
-- Submit for review (first-time products need approval)
-
-## Xcode Configuration
-
-> **💡 Xcode Version Requirement**: Use Xcode 16.4 or later to avoid known issues with in-app purchases. Earlier versions may cause problems like duplicate purchase events. See [#114](https://github.com/hyochan/expo-iap/issues/114) and [react-native-iap #2970](https://github.com/hyochan/react-native-iap/issues/2970) for details.
-
-### 1. Enable In-App Purchase Capability
-
-1. Open your project in Xcode
-2. Select your app target
-3. Go to **Signing & Capabilities**
-4. Click **+ Capability**
-5. Add **In-App Purchase**
-
-### 2. Configure Bundle Identifier
-
-Ensure your bundle identifier in Xcode matches the one in App Store Connect:
-
-1. Select your target
-2. Go to **General** tab
-3. Verify **Bundle Identifier** matches App Store Connect
-
-### 3. Code Signing
-
-Make sure you have proper code signing set up:
-
-1. Go to **Signing & Capabilities**
-2. Select your development team
-3. Choose appropriate provisioning profile
-
-## Testing Setup
-
-### 1. Create Sandbox Test User
-
-1. In App Store Connect, go to **Users and Access**
-2. Click **Sandbox Testers**
-3. Create a new sandbox test user with a unique email
-4. **Important**: Use a different email than your developer account
-
-### 2. Configure Test Environment
-
-On your iOS device:
-
-1. **Important**: You don't need to sign into the App Store app with your sandbox account
-2. Instead, use the dedicated sandbox login:
-   - Go to **Settings** > **Developer** (Developer mode must be enabled)
-   - Tap **Sandbox Apple Account**
-   - Sign in with your sandbox test user credentials
-3. Install your app via Xcode or TestFlight
-4. When making a purchase, it will automatically use the sandbox account
-
-> 💡 **Note**: This is the recommended approach starting from iOS 15+. The old method of signing into the App Store app with sandbox credentials is no longer necessary and can cause confusion.
-
-## Code Integration
+## Code Implementation
 
 ### Basic Setup
 

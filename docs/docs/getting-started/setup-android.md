@@ -8,88 +8,19 @@ import AdFitTopFixed from "@site/src/uis/AdFitTopFixed";
 
 <AdFitTopFixed />
 
-Setting up in-app purchases for Android requires configuration in Google Play Console and proper Android app setup.
+For complete Android setup instructions including Google Play Console configuration, app setup, and testing guidelines, please visit:
 
-## Google Play Console Configuration
+👉 **[Android Setup Guide - openiap.dev](https://openiap.dev/docs/android-setup)**
 
-### 1. Create Your App
+The guide covers:
+- Google Play Console configuration
+- App bundle setup and signing
+- Testing with internal testing tracks
+- Common troubleshooting steps
 
-1. Sign in to [Google Play Console](https://play.google.com/console/)
-2. Create a new app or select your existing app
-3. Complete the app information and store listing
+## App Configuration
 
-### 2. Set Up In-App Products
-
-1. Navigate to **Monetize** > **Products** > **In-app products**
-2. Click **Create product**
-3. Choose your product type:
-   - **Managed product**: One-time purchase (non-consumable)
-   - **Consumable**: Can be purchased multiple times
-
-### 3. Configure Product Details
-
-For each product, provide:
-
-- **Product ID**: Unique identifier (e.g., `premium_upgrade`)
-- **Name**: Product name shown to users
-- **Description**: Product description
-- **Default price**: Set pricing for different countries
-- **Status**: Activate the product
-
-### 4. Set Up Subscriptions (Optional)
-
-1. Navigate to **Monetize** > **Products** > **Subscriptions**
-2. Click **Create subscription**
-3. Configure subscription details:
-   - **Product ID**: Unique identifier
-   - **Base plans**: Pricing and billing periods
-   - **Offers**: Special pricing (optional)
-
-## Android App Configuration
-
-### 1. Google Play Billing Dependencies
-
-Expo IAP automatically includes the necessary Google Play Billing dependencies. No manual configuration needed.
-
-### 2. Permissions
-
-The required billing permission is automatically added. Your `android/app/src/main/AndroidManifest.xml` should include:
-
-```xml
-<uses-permission android:name="com.android.vending.BILLING" />
-```
-
-### 3. ProGuard Configuration
-
-If you're using ProGuard, add these rules to your `android/app/proguard-rules.pro`:
-
-```proguard
--keep class com.android.vending.billing.**
-```
-
-## Testing Setup
-
-### 1. Upload to Play Console
-
-To test in-app purchases, you must upload your app to Google Play Console:
-
-1. Build a signed APK/AAB
-2. Upload to **Internal testing** track
-3. Add test users to the testing track
-
-### 2. Create Test Accounts
-
-1. In Play Console, go to **Setup** > **License testing**
-2. Add Gmail accounts as test users
-3. Test users can make purchases without being charged
-
-### 3. Test Payment Method
-
-Test users should:
-
-1. Use the added test Gmail account on their device
-2. Have a valid payment method (won't be charged for test purchases)
-3. Install the app from the testing track
+Expo IAP automatically handles most Android configuration. The required billing permissions and dependencies are included automatically.
 
 ## Code Integration
 
