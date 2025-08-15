@@ -22,12 +22,10 @@ import {
   Purchase,
   PurchaseError,
   PurchaseResult,
-  RequestSubscriptionPropsWithLegacy,
-  RequestPurchasePropsWithLegacy,
+  RequestSubscriptionProps,
+  RequestPurchaseProps,
   SubscriptionProduct,
   SubscriptionPurchase,
-  isPlatformRequestProps,
-  isUnifiedRequestProps,
 } from './ExpoIap.types';
 import {ProductPurchaseAndroid} from './types/ExpoIapAndroid.types';
 import {PaymentDiscount} from './types/ExpoIapIos.types';
@@ -349,14 +347,13 @@ const offerToRecordIos = (
 };
 
 // Define discriminated union with explicit type parameter
-// Using legacy types internally for backward compatibility
 type PurchaseRequest =
   | {
-      request: RequestPurchasePropsWithLegacy;
+      request: RequestPurchaseProps;
       type?: 'inapp';
     }
   | {
-      request: RequestSubscriptionPropsWithLegacy;
+      request: RequestSubscriptionProps;
       type: 'subs';
     };
 
@@ -364,50 +361,11 @@ type PurchaseRequest =
  * Helper to normalize request props to platform-specific format
  */
 const normalizeRequestProps = (
-  request: RequestPurchasePropsWithLegacy | RequestSubscriptionPropsWithLegacy,
+  request: RequestPurchaseProps | RequestSubscriptionProps,
   platform: 'ios' | 'android',
 ): any => {
-  // If it's already platform-specific format
-  if (isPlatformRequestProps(request)) {
-    return platform === 'ios' ? request.ios : request.android;
-  }
-
-  // If it's unified format, convert to platform-specific
-  if (isUnifiedRequestProps(request)) {
-    if (platform === 'ios') {
-      return {
-        sku: request.sku || (request.skus?.[0] ?? ''),
-        andDangerouslyFinishTransactionAutomaticallyIOS:
-          request.andDangerouslyFinishTransactionAutomaticallyIOS,
-        appAccountToken: request.appAccountToken,
-        quantity: request.quantity,
-        withOffer: request.withOffer,
-      };
-    } else {
-      const androidRequest: any = {
-        skus: request.skus || (request.sku ? [request.sku] : []),
-        obfuscatedAccountIdAndroid: request.obfuscatedAccountIdAndroid,
-        obfuscatedProfileIdAndroid: request.obfuscatedProfileIdAndroid,
-        isOfferPersonalized: request.isOfferPersonalized,
-      };
-
-      // Add subscription-specific fields if present
-      if ('subscriptionOffers' in request && request.subscriptionOffers) {
-        androidRequest.subscriptionOffers = request.subscriptionOffers;
-      }
-      if ('purchaseTokenAndroid' in request) {
-        androidRequest.purchaseTokenAndroid = request.purchaseTokenAndroid;
-      }
-      if ('replacementModeAndroid' in request) {
-        androidRequest.replacementModeAndroid = request.replacementModeAndroid;
-      }
-
-      return androidRequest;
-    }
-  }
-
-  // Legacy format handling
-  return request;
+  // Platform-specific format - directly return the appropriate platform data
+  return platform === 'ios' ? request.ios : request.android;
 };
 
 /**
@@ -575,7 +533,7 @@ export const requestPurchase = (
  * ```
  */
 export const requestSubscription = async (
-  request: RequestSubscriptionPropsWithLegacy,
+  request: RequestSubscriptionProps,
 ): Promise<SubscriptionPurchase | SubscriptionPurchase[] | null | void> => {
   console.warn(
     "`requestSubscription` is deprecated and will be removed in version 3.0.0. Use `requestPurchase({ request, type: 'subs' })` instead.",
