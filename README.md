@@ -63,12 +63,18 @@ For detailed usage examples and error handling, see the [documentation](https://
 
 💼 **[View Our Sponsors](https://openiap.dev/sponsors)**
 
-### <p style="color: gold;">Gold Tier</p>
+### <p style="color: rgb(255, 182, 193);">Angel</p>
 
-<a href="https://www.courier.com/?utm_source=react-native-iap&utm_campaign=osssponsors">
-    <img width="420" alt="courier_dot_com" src="https://github.com/user-attachments/assets/319d8966-6839-498d-8ead-ce8cc72c3bca" />
+<a href="https://meta.com">
+    <img width="600" alt="courier_dot_com" src="https://static.xx.fbcdn.net/rsrc.php/y3/r/y6QsbGgc866.svg" />
 </a>
 
-## Past Sponsors
+### <p style="color: rgb(205, 127, 50);">Bronzne</p>
 
-<a href="https://namiml.com"><img src="https://github.com/hyochan/react-native-iap/assets/27461460/89d71f61-bb73-400a-83bd-fe0f96eb726e" alt="Nami ML" width="280"/></a>
+<a href="https://www.courier.com/?utm_source=react-native-iap&utm_campaign=osssponsors">
+    <img width="120" alt="courier_dot_com" src="https://github.com/user-attachments/assets/319d8966-6839-498d-8ead-ce8cc72c3bca" />
+</a>
+
+## Past Supporters
+
+<a href="https://namiml.com" style="opacity: 50%"><img src="https://github.com/hyochan/react-native-iap/assets/27461460/89d71f61-bb73-400a-83bd-fe0f96eb726e" alt="Nami ML" width="120"/></a>
