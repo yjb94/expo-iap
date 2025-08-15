@@ -7,7 +7,7 @@
   
   In app purchase module in [Expo](https://docs.expo.dev/guides/in-app-purchases) that conforms to the [Open IAP specification](https://openiap.dev)
   
-  <a href="https://openiap.dev"><img src="https://openiap.dev/img/logo.png" alt="Open IAP" height="40" /></a>
+  <a href="https://openiap.dev"><img src="https://openiap.dev/logo.png" alt="Open IAP" height="40" /></a>
 </div>
 
 ## 📚 Documentation
@@ -69,12 +69,12 @@ For detailed usage examples and error handling, see the [documentation](https://
     <img width="600" alt="courier_dot_com" src="https://static.xx.fbcdn.net/rsrc.php/y3/r/y6QsbGgc866.svg" />
 </a>
 
-### <p style="color: rgb(205, 127, 50);">Bronzne</p>
+### <p style="color: rgb(205, 127, 50);">Bronze</p>
 
 <a href="https://www.courier.com/?utm_source=react-native-iap&utm_campaign=osssponsors">
-    <img width="120" alt="courier_dot_com" src="https://github.com/user-attachments/assets/319d8966-6839-498d-8ead-ce8cc72c3bca" />
+    <img width="160" alt="courier_dot_com" src="https://github.com/user-attachments/assets/319d8966-6839-498d-8ead-ce8cc72c3bca" />
 </a>
 
 ## Past Supporters
 
-<a href="https://namiml.com" style="opacity: 50%"><img src="https://github.com/hyochan/react-native-iap/assets/27461460/89d71f61-bb73-400a-83bd-fe0f96eb726e" alt="Nami ML" width="120"/></a>
+<a href="https://namiml.com" style="opacity: 50%"><img src="https://github.com/hyochan/react-native-iap/assets/27461460/89d71f61-bb73-400a-83bd-fe0f96eb726e" alt="Nami ML" width="140"/></a>
