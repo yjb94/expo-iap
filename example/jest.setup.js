@@ -13,13 +13,8 @@ jest.mock('expo-splash-screen', () => ({
 }));
 
 // Mock react-native modules that cause issues in test environment
-jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
-jest.mock('react-native/Libraries/Settings/Settings', () => ({
-  get: jest.fn(),
-  set: jest.fn(),
-  watchKeys: jest.fn(),
-  clearWatch: jest.fn(),
-}));
+// Skip mocking NativeAnimatedHelper as it's not available in newer React Native versions
+// jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
 
 // Mock expo-modules-core
 jest.mock('expo-modules-core', () => ({
