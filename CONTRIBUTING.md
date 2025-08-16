@@ -4,13 +4,16 @@ Thank you for your interest in contributing to expo-iap! This guide will help yo
 
 ## 📋 Table of Contents
 
-- [Development Setup](#development-setup)
-- [Package Manager](#package-manager)
-- [Running the Example App](#running-the-example-app)
-- [Development Guidelines](#development-guidelines)
-- [Testing](#testing)
-- [Code Style](#code-style)
-- [Submitting Changes](#submitting-changes)
+- [Development Setup](#-development-setup)
+- [Package Manager](#-package-manager)
+- [Running the Example App](#-running-the-example-app)
+- [Development Guidelines](#-development-guidelines)
+- [Testing](#-testing)
+- [Code Style](#-code-style)
+- [Submitting Changes](#-submitting-changes)
+- [Reporting Issues](#-reporting-issues)
+- [Feature Requests](#-feature-requests)
+- [Additional Resources](#-additional-resources)
 
 ## 🚀 Development Setup
 
@@ -25,12 +28,14 @@ Thank you for your interest in contributing to expo-iap! This guide will help yo
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/hyochan/expo-iap.git
 cd expo-iap
 ```
 
-2. Install dependencies using Bun:
+1. Install dependencies using Bun:
+
 ```bash
 bun install
 ```
@@ -41,13 +46,14 @@ This project includes VSCode configurations for easier development:
 
 1. **Install recommended extensions**: When you open the project in VSCode, you'll be prompted to install recommended extensions. Accept to install them.
 
-2. **Use Debug Configurations**: Press `F5` or go to Run → Start Debugging and select:
+1. **Use Debug Configurations**: Press `F5` or go to Run → Start Debugging and select:
    - `Debug iOS (Expo)` - Runs the example app on iOS simulator
    - `Debug Android (Expo)` - Runs the example app on Android emulator
    - `iOS + Metro` - Starts Metro bundler and iOS app together
    - `Android + Metro` - Starts Metro bundler and Android app together
 
-3. **Use Tasks**: Press `Cmd+Shift+P` → `Tasks: Run Task` to access:
+1. **Use Tasks**: Press `Cmd+Shift+P` → `Tasks: Run Task` to access:
+
    - `Start iOS Simulator` - Opens iOS Simulator
    - `Start Android Emulator` - Starts Android emulator
    - `Install Pods (iOS)` - Installs CocoaPods dependencies
@@ -70,61 +76,99 @@ This project includes VSCode configurations for easier development:
 
 ## 🧪 Running the Example App
 
-The example app is a great way to test your changes and see the library in action.
+The example app demonstrates all library features and is essential for testing your changes during development.
 
-### Setup
+### Initial Setup
 
 1. Navigate to the example directory:
+
 ```bash
 cd example
 ```
 
-2. Install example app dependencies:
+1. Install example app dependencies:
+
 ```bash
 bun install
 ```
 
-3. For iOS development, install pods:
+1. **iOS Setup** (macOS only):
+
 ```bash
+# Install CocoaPods dependencies
 cd ios
 pod install
 cd ..
 ```
 
-### Running the App
+1. **Android Setup**:
 
-#### iOS
+```bash
+# Ensure Android SDK is configured
+# Set ANDROID_HOME environment variable if not already set
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+```
+
+### Running on iOS
+
+#### Using Expo CLI (Recommended)
+
 ```bash
 bun run ios
+# Or specify a device
+bun run ios --device "iPhone 15 Pro"
 ```
 
-Or open the project in Xcode:
+#### Using Xcode
+
 ```bash
-open ios/cpk.xcworkspace
+# Open the workspace in Xcode
+open ios/expoiapexample.xcworkspace
 ```
 
-**Note**: If you encounter build errors, you may need to:
-1. Clean the build: `cd ios && xcodebuild clean`
-2. Update pods: `cd ios && pod install`
-3. Open in Xcode and build from there for better error messages
+Then select a simulator or device and press Run (⌘R).
 
-#### Android
+#### Troubleshooting iOS
+
+- **Build errors**: Clean build folder in Xcode (Shift+⌘K)
+- **Pod issues**: `cd ios && pod deintegrate && pod install`
+- **Metro issues**: `bun start --reset-cache`
+
+### Running on Android
+
+#### Using Expo CLI (Recommended)
+
 ```bash
 bun run android
+# Or specify a device
+bun run android --device "Pixel_7_API_34"
 ```
 
-Or open the project in Android Studio:
+#### Using Android Studio
+
 ```bash
+# Open the project in Android Studio
 open -a "Android Studio" android
 ```
 
-**Note**: First run may take longer as it downloads Gradle dependencies.
+Then select an emulator or device and press Run.
+
+#### Troubleshooting Android
+
+- **Gradle issues**: `cd android && ./gradlew clean`
+- **Emulator not starting**: Start it manually from Android Studio
+- **Connection issues**: `adb reverse tcp:8081 tcp:8081`
 
 ### Development Server
 
-Start the Metro bundler:
+The Metro bundler is automatically started when running the app. To start it manually:
+
 ```bash
 bun start
+# Or with cache reset
+bun start --reset-cache
 ```
 
 ### Available Scripts
@@ -159,44 +203,57 @@ bun run reset-project
 
 ## 📖 Development Guidelines
 
-### Platform-Specific Naming Conventions
+### Code Conventions and Standards
 
-Functions that only work on one platform MUST have platform suffixes:
+For detailed code conventions, naming standards, and implementation guidelines, please refer to [CLAUDE.md](./CLAUDE.md). This includes:
 
-- iOS-only functions: append `Ios` suffix
-- Android-only functions: append `Android` suffix
-- Cross-platform functions: no suffix needed
+- Platform-specific naming conventions
+- API method naming patterns
+- Pre-commit checks
+- OpenIAP specification compliance
 
-#### Examples:
+### Development Workflow
 
-```typescript
-// ✅ Good - Platform-specific functions with suffixes
-export const validateReceiptIos = async (sku: string) => { ... }
-export const validateReceiptAndroid = async (options: AndroidValidationOptions) => { ... }
-export const getStorefrontIos = async (): Promise<string> => { ... }
-export const getAppTransactionIos = async (): Promise<AppTransactionIOS | null> => { ... }
+1. **Before starting work**:
 
-// ✅ Good - Cross-platform function without suffix
-export const requestProducts = async (params: { skus: string[], type?: 'inapp' | 'subs' }) => {
-  return Platform.select({
-    ios: async () => { /* iOS implementation */ },
-    android: async () => { /* Android implementation */ },
-  })();
-}
+   - Pull latest changes from main branch
+   - Create a feature branch: `git checkout -b feature/your-feature`
+   - Review [CLAUDE.md](./CLAUDE.md) for coding standards
 
-// ❌ Bad - Platform-specific function without suffix
-export const getStorefront = async () => { ... } // Only works on iOS, should be getStorefrontIos
-```
+1. **During development**:
 
-### Type Naming Conventions
+   - Make changes to the library source code in `src/`
+   - Test changes in the example app
+   - Write/update tests as needed
+   - Keep commits atomic and well-described
 
-- Platform-specific types: `ProductIos`, `ProductAndroid`, `PurchaseErrorIos`
-- Cross-platform types: `Product`, `Purchase`, `PurchaseError`
+1. **Before committing**:
+
+   - Follow the pre-commit checks outlined in [CLAUDE.md](./CLAUDE.md)
+   - Ensure all checks pass
+
+1. **Testing your changes**:
+
+   - The example app automatically uses the local library code
+   - Changes to `src/` will be reflected after reloading the app
+   - Test on both iOS and Android platforms when possible
+
+### Code Conventions
+
+For all code conventions including:
+
+- Platform-specific naming conventions
+- Type naming conventions
+- API method naming patterns
+- OpenIAP specification compliance
+
+Please refer to [CLAUDE.md](./CLAUDE.md).
 
 ### AI Development Tools
 
 We provide configuration files for AI-powered development tools:
 
+- `CLAUDE.md` - Comprehensive guidelines for Claude and other AI assistants
 - `.cursorrules` - Rules for Cursor IDE
 - `.copilot-instructions.md` - Instructions for GitHub Copilot
 
@@ -214,6 +271,7 @@ bun test
 ```
 
 Run tests with coverage:
+
 ```bash
 bun run test:coverage
 ```
@@ -226,6 +284,7 @@ bun run test:coverage
 - Test both iOS and Android code paths
 
 Example test structure:
+
 ```typescript
 import { render, fireEvent } from '@testing-library/react-native';
 import MyComponent from '../MyComponent';
@@ -239,6 +298,7 @@ describe('MyComponent', () => {
 ```
 
 **Known Issues**:
+
 - React Native modules may need to be mocked in tests
 - Use Jest's module mocking for native dependencies
 - Some tests may fail due to native module dependencies
@@ -248,11 +308,13 @@ describe('MyComponent', () => {
 ### Linting
 
 Run linting checks:
+
 ```bash
 bun run lint
 ```
 
 Fix linting issues:
+
 ```bash
 bun run lint:eslint
 bun run lint:prettier
@@ -268,6 +330,7 @@ bun run lint:prettier
 ### Code Formatting
 
 We use Prettier for code formatting. Format your code:
+
 ```bash
 bun run lint:prettier
 ```
@@ -277,7 +340,8 @@ bun run lint:prettier
 ### Commit Messages
 
 Follow conventional commit format:
-```
+
+```text
 type(scope): subject
 
 body
@@ -286,16 +350,18 @@ footer
 ```
 
 Types:
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, etc.)
-- `refactor`: Code refactoring
-- `test`: Test additions or modifications
-- `chore`: Maintenance tasks
+
+- `feat`: new feature
+- `fix`: bug fix
+- `docs`: documentation changes
+- `style`: code style changes (formatting, etc.)
+- `refactor`: code refactoring
+- `test`: test additions or modifications
+- `chore`: maintenance tasks
 
 Example:
-```
+
+```text
 feat(ios): add getStorefrontIos function
 
 Implements iOS-specific storefront retrieval using StoreKit.
@@ -307,13 +373,14 @@ Closes #123
 ### Pull Request Process
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Make your changes following the guidelines above
-4. Run tests and ensure they pass: `cd example && bun test`
-5. Run linting: `bun run lint:ci`
-6. Commit your changes with a descriptive message
-7. Push to your fork
-8. Create a Pull Request with:
+1. Create a feature branch: `git checkout -b feature/your-feature`
+1. Make your changes following the guidelines above
+1. Run tests and ensure they pass: `cd example && bun test`
+1. Run linting: `bun run lint:ci`
+1. Commit your changes with a descriptive message
+1. Push to your fork
+1. Create a Pull Request with:
+
    - Clear description of changes
    - Any breaking changes noted
    - Tests for new functionality
@@ -329,6 +396,7 @@ Closes #123
 ## 🐛 Reporting Issues
 
 When reporting issues, please include:
+
 - expo-iap version
 - React Native/Expo SDK version
 - Platform (iOS/Android)
@@ -340,6 +408,7 @@ When reporting issues, please include:
 ## 💡 Feature Requests
 
 We welcome feature requests! Please:
+
 - Check existing issues first
 - Provide use case and motivation
 - Consider implementation approach
@@ -350,6 +419,5 @@ We welcome feature requests! Please:
 - [Documentation Site](https://expo-iap.hyo.dev)
 - [API Reference](https://expo-iap.hyo.dev/docs/api/use-iap)
 - [Example App](./example)
-- [Platform-Specific Guidelines](./docs/PLATFORM_NAMING.md)
 
 Thank you for contributing to expo-iap! 🎉

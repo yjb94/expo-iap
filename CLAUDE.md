@@ -1,0 +1,45 @@
+# Implementation Guidelines
+
+## Expo-Specific Guidelines
+
+### Pre-Commit Checks
+
+Before committing any changes:
+
+1. Run `bun run lint` to ensure code quality
+2. Run `bun run typecheck` to verify TypeScript types
+3. Run `bun test` to verify all tests pass
+4. Only commit if all checks succeed
+
+### Platform-Specific Naming Conventions
+
+- **iOS-related code**: Use `Ios` in naming (e.g., `PurchaseIos`, `SubscriptionOfferIos`)
+- **Android-related code**: Use `Android` in naming (e.g., `PurchaseAndroid`, `SubscriptionOfferAndroid`)
+- **IAP-related code**: Use `Iap` in naming (e.g., `IapPurchase`, not `IAPPurchase`)
+- This applies to both functions, types, and file names
+
+### API Method Naming
+
+- Functions that depend on event results should use `request` prefix (e.g., `requestPurchase`, `requestSubscription`)
+- Follow OpenIAP terminology: <https://www.openiap.dev/docs/apis#terminology>
+- Do not use generic prefixes like `get`, `find` - refer to the official terminology
+
+## IAP-Specific Guidelines
+
+### OpenIAP Specification
+
+All implementations must follow the OpenIAP specification:
+
+- **APIs**: <https://www.openiap.dev/docs/apis>
+- **Types**: <https://www.openiap.dev/docs/types>
+- **Events**: <https://www.openiap.dev/docs/events>
+- **Errors**: <https://www.openiap.dev/docs/errors>
+
+### Feature Development Process
+
+For new feature proposals:
+
+1. Before implementing, discuss at: <https://github.com/hyochan/openiap.dev/discussions>
+2. Get community feedback and consensus
+3. Ensure alignment with OpenIAP standards
+4. Implement following the agreed specification
