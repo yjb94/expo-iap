@@ -633,6 +633,106 @@ const storeFront = await getStorefront()
 
 **Returns:** `Promise<string>`
 
+## getActiveSubscriptions()
+
+Retrieves all active subscriptions with detailed status information. This method follows the OpenIAP specification for cross-platform subscription management.
+
+```tsx
+import {getActiveSubscriptions} from 'expo-iap';
+
+const checkSubscriptions = async () => {
+  try {
+    // Get all active subscriptions
+    const allActiveSubscriptions = await getActiveSubscriptions();
+    
+    // Or filter by specific subscription IDs
+    const specificSubscriptions = await getActiveSubscriptions([
+      'premium_monthly',
+      'premium_yearly'
+    ]);
+    
+    for (const subscription of allActiveSubscriptions) {
+      console.log('Product ID:', subscription.productId);
+      console.log('Is Active:', subscription.isActive);
+      
+      if (Platform.OS === 'ios') {
+        console.log('Expiration Date:', subscription.expirationDateIOS);
+        console.log('Days until expiration:', subscription.daysUntilExpirationIOS);
+        console.log('Environment:', subscription.environmentIOS);
+      } else if (Platform.OS === 'android') {
+        console.log('Auto Renewing:', subscription.autoRenewingAndroid);
+      }
+      
+      console.log('Will expire soon:', subscription.willExpireSoon);
+    }
+  } catch (error) {
+    console.error('Failed to get active subscriptions:', error);
+  }
+};
+```
+
+**Parameters:**
+
+- `subscriptionIds?` (string[]): Optional array of subscription product IDs to filter. If not provided, returns all active subscriptions.
+
+**Returns:** `Promise<ActiveSubscription[]>`
+
+**ActiveSubscription Interface:**
+
+```typescript
+interface ActiveSubscription {
+  productId: string;
+  isActive: boolean;
+  expirationDateIOS?: Date;
+  autoRenewingAndroid?: boolean;
+  environmentIOS?: string;
+  willExpireSoon?: boolean;
+  daysUntilExpirationIOS?: number;
+}
+```
+
+**Platform Behavior:**
+
+- **iOS**: Uses `expirationDateIos` to determine subscription status. Includes expiration date and days until expiration.
+- **Android**: Uses purchase list presence and `autoRenewingAndroid` flag to determine status.
+
+## hasActiveSubscriptions()
+
+Checks if the user has any active subscriptions. This is a convenience method that returns a boolean result.
+
+```tsx
+import {hasActiveSubscriptions} from 'expo-iap';
+
+const checkIfUserHasSubscription = async () => {
+  try {
+    // Check if user has any active subscriptions
+    const hasAny = await hasActiveSubscriptions();
+    
+    // Or check for specific subscriptions
+    const hasPremium = await hasActiveSubscriptions([
+      'premium_monthly',
+      'premium_yearly'
+    ]);
+    
+    if (hasAny) {
+      console.log('User has active subscriptions');
+    }
+    
+    if (hasPremium) {
+      console.log('User has premium subscription');
+    }
+  } catch (error) {
+    console.error('Failed to check subscription status:', error);
+  }
+};
+```
+
+**Parameters:**
+
+- `subscriptionIds?` (string[]): Optional array of subscription product IDs to check. If not provided, checks all subscriptions.
+
+**Returns:** `Promise<boolean>` - Returns true if user has at least one active subscription
+
 ## Purchase Interface
 
 ```tsx

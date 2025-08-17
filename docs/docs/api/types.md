@@ -109,6 +109,34 @@ interface Subscription {
 }
 ```
 
+## Subscription Status Types
+
+### ActiveSubscription
+
+Represents an active subscription with platform-specific details.
+
+```typescript
+interface ActiveSubscription {
+  productId: string;
+  isActive: boolean;
+  expirationDateIOS?: Date;
+  autoRenewingAndroid?: boolean;
+  environmentIOS?: string;
+  willExpireSoon?: boolean;
+  daysUntilExpirationIOS?: number;
+}
+```
+
+**Platform-Specific Behavior:**
+
+- **iOS**: Provides exact `expirationDateIOS`, `daysUntilExpirationIOS`, and `environmentIOS` ("Sandbox" | "Production")
+- **Android**: Provides `autoRenewingAndroid` status. When `false`, the subscription will not renew
+
+**Usage with subscription status APIs:**
+
+- Used as return type for `getActiveSubscriptions()`
+- Contains `willExpireSoon` flag (true if expiring within 7 days)
+
 ## Platform-Specific Types
 
 ### iOS
