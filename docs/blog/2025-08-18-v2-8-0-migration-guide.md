@@ -89,18 +89,18 @@ Version 2.8.0 introduces naming convention changes:
 
 ### ID Suffix Changes (ID → Id)
 
-| Old Field Name         | New Field Name        | Type/Context           |
-| --------------------- | -------------------- | ---------------------- |
-| `subscriptionGroupID` | `subscriptionGroupId` | SubscriptionInfo       |
-| `appTransactionID`    | `appTransactionId`    | AppTransactionIOS      |
-| `bundleID`            | `bundleId`            | AppTransactionIOS      |
-| `appID`               | `appId`               | AppTransactionIOS      |
-| `appVersionID`        | `appVersionId`        | AppTransactionIOS      |
+| Old Field Name        | New Field Name        | Type/Context      |
+| --------------------- | --------------------- | ----------------- |
+| `subscriptionGroupID` | `subscriptionGroupId` | SubscriptionInfo  |
+| `appTransactionID`    | `appTransactionId`    | AppTransactionIOS |
+| `bundleID`            | `bundleId`            | AppTransactionIOS |
+| `appID`               | `appId`               | AppTransactionIOS |
+| `appVersionID`        | `appVersionId`        | AppTransactionIOS |
 
 ### Function Parameter Changes
 
 | Function                     | Old Parameter | New Parameter |
-| --------------------------- | ------------- | ------------- |
+| ---------------------------- | ------------- | ------------- |
 | `isEligibleForIntroOfferIOS` | `groupID`     | `groupId`     |
 
 ## Android Changes
@@ -145,7 +145,7 @@ Search your codebase for any references to the old field names and update them:
 
 ```typescript
 // Before (v2.7.x)
-const purchase = await requestPurchase({ sku: 'product-id' });
+const purchase = await requestPurchase({sku: 'product-id'});
 if (purchase.expirationDateIos) {
   console.log('Expires:', purchase.expirationDateIos);
 }
@@ -154,8 +154,8 @@ if (purchase.expirationDateIos) {
 // Note: requestPurchase API signature has also changed in v2.8.0
 const purchase = await requestPurchase({
   request: {
-    ios: { sku: 'product-id' },
-    android: { skus: ['product-id'] },
+    ios: {sku: 'product-id'},
+    android: {skus: ['product-id']},
   },
   type: 'inapp',
 });
@@ -271,4 +271,4 @@ If you encounter any issues during migration:
 
 - Check our [GitHub Issues](https://github.com/hyochan/expo-iap/issues)
 - Join our [Slack community](https://hyo.dev/joinSlack)
-- Review the [full documentation](https://expo-iap.pages.dev)
+- Review the [full documentation](https://expo-iap.hyo.dev)
