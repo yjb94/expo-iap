@@ -38,7 +38,9 @@ export default function SubscriptionFlow() {
   const {
     connected,
     subscriptions,
+    availablePurchases,
     requestProducts,
+    getAvailablePurchases,
     finishTransaction,
     getActiveSubscriptions,
     activeSubscriptions,
@@ -47,10 +49,33 @@ export default function SubscriptionFlow() {
       console.log('Subscription successful:', purchase);
       setIsProcessing(false);
 
-      // Handle successful subscription
+      // Check if this is a duplicate subscription (already active)
+      const isAlreadySubscribed = activeSubscriptions.some(sub => sub.productId === purchase.productId);
+      
+      if (isAlreadySubscribed) {
+        // This is likely a duplicate transaction or restoration
+        setPurchaseResult(
+          `ℹ️ Subscription restored/verified (${purchase.platform})\n` +
+            `Product: ${purchase.productId}\n` +
+            `No additional charge - existing subscription confirmed`,
+        );
+        
+        await finishTransaction({
+          purchase,
+          isConsumable: false,
+        });
+        
+        Alert.alert(
+          'Subscription Status', 
+          'Your subscription is already active. No additional charge was made.'
+        );
+        return;
+      }
+
+      // Handle new subscription
       setPurchaseResult(
         `✅ Subscription successful (${purchase.platform})\n` +
-          `Product: ${purchase.id}\n` +
+          `Product: ${purchase.productId}\n` +
           `Transaction ID: ${purchase.transactionId || 'N/A'}\n` +
           `Date: ${new Date(purchase.transactionDate).toLocaleDateString()}\n` +
           `Receipt: ${purchase.transactionReceipt?.substring(0, 50)}...`,
@@ -73,6 +98,11 @@ export default function SubscriptionFlow() {
       });
 
       Alert.alert('Success', 'Subscription activated successfully!');
+      
+      // Refresh subscription status after successful purchase
+      setTimeout(() => {
+        checkSubscriptionStatus();
+      }, 1000);
     },
     onPurchaseError: (error: PurchaseError) => {
       console.error('Subscription failed:', error);
@@ -93,20 +123,22 @@ export default function SubscriptionFlow() {
 
   // Check subscription status using the new library API
   const checkSubscriptionStatus = useCallback(async () => {
-    if (!connected) return;
+    if (!connected || isCheckingStatus) return;
     
+    console.log('Checking subscription status...');
     setIsCheckingStatus(true);
     try {
       // No need to pass subscriptionIds - it will check all active subscriptions
       const subs = await getActiveSubscriptions();
-      console.log('Active subscriptions:', subs);
+      console.log('Active subscriptions result:', subs);
     } catch (error) {
       console.error('Error checking subscription status:', error);
-      Alert.alert('Error', 'Failed to check subscription status');
+      // Don't show alert for every error - user might be offline or have temporary issues
+      console.warn('Subscription status check failed, but existing state preserved');
     } finally {
       setIsCheckingStatus(false);
     }
-  }, [connected, getActiveSubscriptions]);
+  }, [connected, getActiveSubscriptions, isCheckingStatus]);
 
   // Load subscriptions and check status when component mounts
   useEffect(() => {
@@ -114,17 +146,42 @@ export default function SubscriptionFlow() {
       const subscriptionIds = [
         'dev.hyo.martie.premium', // Example subscription ID
       ];
+      console.log('Connected to store, loading subscription products...');
+      // requestProducts is event-based, not promise-based
+      // Results will be available through the useIAP hook's subscriptions state
       requestProducts({ skus: subscriptionIds, type: 'subs' });
+      console.log('Product loading request sent - waiting for results...');
+      
+      // Load available purchases to check subscription history  
+      console.log('Loading available purchases...');
+      getAvailablePurchases([]).catch(error => {
+        console.warn('Failed to load available purchases:', error);
+      });
     }
-  }, [connected, requestProducts]);
+  }, [connected, requestProducts, getAvailablePurchases]);
   
   // Check subscription status separately to avoid infinite loop
   useEffect(() => {
     if (connected) {
-      checkSubscriptionStatus();
+      // Use a timeout to avoid rapid consecutive calls
+      const timer = setTimeout(() => {
+        checkSubscriptionStatus();
+      }, 500);
+      
+      return () => clearTimeout(timer);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected]);
+
+  // Track activeSubscriptions state changes
+  useEffect(() => {
+    console.log('[STATE CHANGE] activeSubscriptions:', activeSubscriptions.length, activeSubscriptions);
+  }, [activeSubscriptions]);
+
+  // Track subscriptions (products) state changes
+  useEffect(() => {
+    console.log('[STATE CHANGE] subscriptions (products):', subscriptions.length, subscriptions.map(s => ({ id: s.id, title: s.title })));
+  }, [subscriptions]);
 
   const handleSubscription = async (itemId: string) => {
     try {
@@ -135,6 +192,7 @@ export default function SubscriptionFlow() {
       const subscription = subscriptions.find(sub => sub.id === itemId);
       
       // New platform-specific API (v2.7.0+) - no Platform.OS branching needed
+      // requestPurchase is event-based - results come through onPurchaseSuccess/onPurchaseError
       await requestPurchase({
         request: {
           ios: {
@@ -239,6 +297,22 @@ export default function SubscriptionFlow() {
           </Text>
         </View>
       </View>
+
+      {/* Debug Information */}
+      {__DEV__ && (
+        <View style={[styles.section, {backgroundColor: '#fff3cd'}]}>
+          <Text style={styles.sectionTitle}>Debug Info (Dev Only)</Text>
+          <Text style={{fontSize: 12, fontFamily: 'monospace'}}>
+            Connected: {connected.toString()}{'\n'}
+            Subscriptions: {subscriptions.length}{'\n'}
+            Active Subscriptions: {activeSubscriptions.length}{'\n'}
+            Available Purchases: {availablePurchases.length}{'\n'}
+            Checking Status: {isCheckingStatus.toString()}{'\n'}
+            {activeSubscriptions.length > 0 && `Active IDs: ${activeSubscriptions.map(s => s.productId).join(', ')}\n`}
+            {activeSubscriptions.length > 0 && `Active Status: ${JSON.stringify(activeSubscriptions[0], null, 2)}`}
+          </Text>
+        </View>
+      )}
 
       {/* Subscription Status Section - Using library's activeSubscriptions */}
       {activeSubscriptions.length > 0 ? (
@@ -359,13 +433,22 @@ export default function SubscriptionFlow() {
               <TouchableOpacity
                 style={[
                   styles.subscribeButton,
-                  isProcessing && styles.disabledButton,
+                  (isProcessing || activeSubscriptions.some(sub => sub.productId === subscription.id)) && styles.disabledButton,
+                  activeSubscriptions.some(sub => sub.productId === subscription.id) && styles.subscribedButton,
                 ]}
                 onPress={() => handleSubscription(subscription.id)}
-                disabled={isProcessing || !connected}
+                disabled={isProcessing || !connected || activeSubscriptions.some(sub => sub.productId === subscription.id)}
               >
-                <Text style={styles.subscribeButtonText}>
-                  {isProcessing ? 'Processing...' : 'Subscribe'}
+                <Text style={[
+                  styles.subscribeButtonText,
+                  activeSubscriptions.some(sub => sub.productId === subscription.id) && styles.subscribedButtonText,
+                ]}>
+                  {isProcessing 
+                    ? 'Processing...' 
+                    : activeSubscriptions.some(sub => sub.productId === subscription.id)
+                      ? '✅ Subscribed'
+                      : 'Subscribe'
+                  }
                 </Text>
               </TouchableOpacity>
             </View>
@@ -385,6 +468,47 @@ export default function SubscriptionFlow() {
           </View>
         )}
       </View>
+
+      {/* Available Purchases Section */}
+      {availablePurchases.length > 0 ? (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Available Purchases History</Text>
+          <Text style={styles.subtitle}>
+            Past purchases and subscription transactions
+          </Text>
+          {availablePurchases.map((purchase, index) => (
+            <View key={`${purchase.productId}-${index}`} style={styles.purchaseCard}>
+              <View style={styles.purchaseInfo}>
+                <Text style={styles.purchaseTitle}>{purchase.productId}</Text>
+                <Text style={styles.purchaseDate}>
+                  {new Date(purchase.transactionDate).toLocaleDateString()}
+                </Text>
+                <Text style={styles.purchasePlatform}>
+                  Platform: {purchase.platform}
+                </Text>
+                {Platform.OS === 'ios' && 'expirationDateIOS' in purchase && purchase.expirationDateIOS ? (
+                  <Text style={styles.purchaseExpiry}>
+                    Expires: {new Date(purchase.expirationDateIOS).toLocaleDateString()}
+                  </Text>
+                ) : null}
+                {Platform.OS === 'android' && 'autoRenewingAndroid' in purchase ? (
+                  <Text style={styles.purchaseRenewal}>
+                    Auto-Renewing: {purchase.autoRenewingAndroid ? 'Yes' : 'No'}
+                  </Text>
+                ) : null}
+              </View>
+              <View style={styles.purchaseStatus}>
+                <Text style={styles.purchaseStatusText}>
+                  {purchase.platform === 'ios' && 'expirationDateIOS' in purchase && purchase.expirationDateIOS
+                    ? (purchase.expirationDateIOS > Date.now() ? '✅ Active' : '❌ Expired')
+                    : '✅ Purchased'
+                  }
+                </Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : null}
 
       {purchaseResult ? (
         <View style={styles.section}>
@@ -648,5 +772,58 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e0e0e0',
     paddingBottom: 12,
     marginBottom: 12,
+  },
+  subscribedButton: {
+    backgroundColor: '#6c757d',
+  },
+  subscribedButtonText: {
+    color: '#fff',
+  },
+  purchaseCard: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  purchaseInfo: {
+    flex: 1,
+  },
+  purchaseTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  purchaseDate: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 2,
+  },
+  purchasePlatform: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 2,
+  },
+  purchaseExpiry: {
+    fontSize: 12,
+    color: '#28a745',
+    marginBottom: 2,
+  },
+  purchaseRenewal: {
+    fontSize: 12,
+    color: '#007AFF',
+  },
+  purchaseStatus: {
+    alignItems: 'center',
+  },
+  purchaseStatusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#28a745',
   },
 });

@@ -12,6 +12,7 @@ const mockRequestProducts = jest.fn();
 const mockRequestPurchase = jest.fn();
 const mockFinishTransaction = jest.fn();
 const mockGetActiveSubscriptions = jest.fn();
+const mockGetAvailablePurchases = jest.fn().mockResolvedValue([]);
 
 const createMockSubscription = (overrides = {}) => ({
   id: 'test.subscription.1',
@@ -68,12 +69,15 @@ describe('SubscriptionFlow Component', () => {
     mockRequestProducts.mockResolvedValue([createMockSubscription()]);
     mockGetActiveSubscriptions.mockResolvedValue([]);
     mockFinishTransaction.mockResolvedValue(undefined);
+    mockGetAvailablePurchases.mockResolvedValue([]);
     
     // Default mock implementation
     mockUseIAP.mockReturnValue({
       connected: true,
       subscriptions: [createMockSubscription()],
+      availablePurchases: [],
       requestProducts: mockRequestProducts,
+      getAvailablePurchases: mockGetAvailablePurchases,
       finishTransaction: mockFinishTransaction,
       getActiveSubscriptions: mockGetActiveSubscriptions,
       activeSubscriptions: [],
@@ -127,7 +131,9 @@ describe('SubscriptionFlow Component', () => {
     mockUseIAP.mockReturnValue({
       connected: true,
       subscriptions: [createMockSubscription()],
+      availablePurchases: [],
       requestProducts: mockRequestProducts,
+      getAvailablePurchases: mockGetAvailablePurchases,
       finishTransaction: mockFinishTransaction,
       getActiveSubscriptions: mockGetActiveSubscriptions,
       activeSubscriptions: [activeSubscription],
@@ -151,7 +157,9 @@ describe('SubscriptionFlow Component', () => {
     mockUseIAP.mockReturnValue({
       connected: true,
       subscriptions: [createMockSubscription()],
+      availablePurchases: [],
       requestProducts: mockRequestProducts,
+      getAvailablePurchases: mockGetAvailablePurchases,
       finishTransaction: mockFinishTransaction,
       getActiveSubscriptions: mockGetActiveSubscriptions,
       activeSubscriptions: [expiringSubscription],
@@ -178,7 +186,9 @@ describe('SubscriptionFlow Component', () => {
     mockUseIAP.mockReturnValue({
       connected: true,
       subscriptions: [createMockAndroidSubscription()],
+      availablePurchases: [],
       requestProducts: mockRequestProducts,
+      getAvailablePurchases: mockGetAvailablePurchases,
       finishTransaction: mockFinishTransaction,
       getActiveSubscriptions: mockGetActiveSubscriptions,
       activeSubscriptions: [androidActiveSubscription],
@@ -193,7 +203,9 @@ describe('SubscriptionFlow Component', () => {
     mockUseIAP.mockReturnValue({
       connected: true,
       subscriptions: [createMockSubscription()],
+      availablePurchases: [],
       requestProducts: mockRequestProducts,
+      getAvailablePurchases: mockGetAvailablePurchases,
       finishTransaction: mockFinishTransaction,
       getActiveSubscriptions: mockGetActiveSubscriptions,
       activeSubscriptions: [{
@@ -213,7 +225,9 @@ describe('SubscriptionFlow Component', () => {
     mockUseIAP.mockReturnValue({
       connected: true,
       subscriptions: [],
+      availablePurchases: [],
       requestProducts: mockRequestProducts,
+      getAvailablePurchases: mockGetAvailablePurchases,
       finishTransaction: mockFinishTransaction,
       getActiveSubscriptions: mockGetActiveSubscriptions,
       activeSubscriptions: [],
@@ -228,7 +242,9 @@ describe('SubscriptionFlow Component', () => {
     mockUseIAP.mockReturnValue({
       connected: true,
       subscriptions: [],
+      availablePurchases: [],
       requestProducts: mockRequestProducts,
+      getAvailablePurchases: mockGetAvailablePurchases,
       finishTransaction: mockFinishTransaction,
       getActiveSubscriptions: mockGetActiveSubscriptions,
       activeSubscriptions: [],
@@ -248,7 +264,9 @@ describe('SubscriptionFlow Component', () => {
     mockUseIAP.mockReturnValue({
       connected: false,
       subscriptions: [],
+      availablePurchases: [],
       requestProducts: mockRequestProducts,
+      getAvailablePurchases: mockGetAvailablePurchases,
       finishTransaction: mockFinishTransaction,
       getActiveSubscriptions: mockGetActiveSubscriptions,
       activeSubscriptions: [],
@@ -273,7 +291,9 @@ describe('SubscriptionFlow Component', () => {
     mockUseIAP.mockReturnValue({
       connected: true,
       subscriptions: [createMockSubscription()],
+      availablePurchases: [],
       requestProducts: mockRequestProducts,
+      getAvailablePurchases: mockGetAvailablePurchases,
       finishTransaction: mockFinishTransaction,
       getActiveSubscriptions: mockGetActiveSubscriptions,
       activeSubscriptions: [],
@@ -290,7 +310,9 @@ describe('SubscriptionFlow Component', () => {
     mockUseIAP.mockReturnValue({
       connected: true,
       subscriptions: [createMockSubscription()],
+      availablePurchases: [],
       requestProducts: mockRequestProducts,
+      getAvailablePurchases: mockGetAvailablePurchases,
       finishTransaction: mockFinishTransaction,
       getActiveSubscriptions: mockGetActiveSubscriptions,
       activeSubscriptions: [],

@@ -5,9 +5,9 @@ import {Platform} from 'react-native';
 // Internal modules
 import ExpoIapModule from './ExpoIapModule';
 import {
-  isProductIos,
+  isProductIOS,
   validateReceiptIOS,
-  deepLinkToSubscriptionsIos,
+  deepLinkToSubscriptionsIOS,
 } from './modules/ios';
 import {
   isProductAndroid,
@@ -28,13 +28,13 @@ import {
   SubscriptionPurchase,
 } from './ExpoIap.types';
 import {ProductPurchaseAndroid} from './types/ExpoIapAndroid.types';
-import {PaymentDiscount} from './types/ExpoIapIos.types';
+import {PaymentDiscount} from './types/ExpoIapIOS.types';
 
 // Export all types
 export * from './ExpoIap.types';
 export * from './modules/android';
 export * from './modules/ios';
-export type {AppTransactionIOS} from './types/ExpoIapIos.types';
+export type {AppTransactionIOS} from './types/ExpoIapIOS.types';
 
 // Export subscription helpers
 export {
@@ -135,7 +135,7 @@ export const getProducts = async (skus: string[]): Promise<Product[]> => {
     ios: async () => {
       const rawItems = await ExpoIapModule.getItems(skus);
       return rawItems.filter((item: unknown) => {
-        if (!isProductIos(item)) return false;
+        if (!isProductIOS(item)) return false;
         return (
           typeof item === 'object' &&
           item !== null &&
@@ -169,7 +169,7 @@ export const getSubscriptions = async (
     ios: async () => {
       const rawItems = await ExpoIapModule.getItems(skus);
       return rawItems.filter((item: unknown) => {
-        if (!isProductIos(item)) return false;
+        if (!isProductIOS(item)) return false;
         return (
           typeof item === 'object' &&
           item !== null &&
@@ -236,7 +236,7 @@ export const requestProducts = async ({
   if (Platform.OS === 'ios') {
     const rawItems = await ExpoIapModule.getItems(skus);
     const filteredItems = rawItems.filter((item: unknown) => {
-      if (!isProductIos(item)) return false;
+      if (!isProductIOS(item)) return false;
       return (
         typeof item === 'object' &&
         item !== null &&
@@ -333,15 +333,14 @@ export const getAvailablePurchases = ({
         ),
       android: async () => {
         const products = await ExpoIapModule.getAvailableItemsByType('inapp');
-        const subscriptions = await ExpoIapModule.getAvailableItemsByType(
-          'subs',
-        );
+        const subscriptions =
+          await ExpoIapModule.getAvailableItemsByType('subs');
         return products.concat(subscriptions);
       },
     }) || (() => Promise.resolve([]))
   )();
 
-const offerToRecordIos = (
+const offerToRecordIOS = (
   offer: PaymentDiscount | undefined,
 ): Record<keyof PaymentDiscount, string> | undefined => {
   if (!offer) return undefined;
@@ -436,7 +435,7 @@ export const requestPurchase = (
     } = normalizedRequest;
 
     return (async () => {
-      const offer = offerToRecordIos(withOffer);
+      const offer = offerToRecordIOS(withOffer);
       const purchase = await ExpoIapModule.buyProduct(
         sku,
         andDangerouslyFinishTransactionAutomaticallyIOS,
@@ -683,7 +682,7 @@ export const deepLinkToSubscriptions = (options: {
   packageNameAndroid?: string;
 }): Promise<void> => {
   if (Platform.OS === 'ios') {
-    return deepLinkToSubscriptionsIos();
+    return deepLinkToSubscriptionsIOS();
   }
 
   if (Platform.OS === 'android') {
@@ -710,5 +709,5 @@ export const deepLinkToSubscriptions = (options: {
   return Promise.reject(new Error(`Unsupported platform: ${Platform.OS}`));
 };
 
-export * from './useIap';
+export * from './useIAP';
 export * from './utils/errorMapping';
