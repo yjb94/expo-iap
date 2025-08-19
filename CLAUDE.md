@@ -1,5 +1,17 @@
 # Implementation Guidelines
 
+## Release Notes
+
+### v2.8.1 (2025-08-19)
+- Added `platform` field to all types for runtime type discrimination
+- Moved common fields to shared base types (`ids`, `debugDescription`)
+- Fixed iOS native code to populate missing subscription fields
+- No breaking changes, but deprecated fields will be removed in v2.9.0
+
+### v2.8.0 (2025-08-18)
+- **Breaking**: iOS field naming convention changed (e.g., `quantityIos` → `quantityIOS`)
+- All iOS-related field names ending with "Ios" now end with "IOS"
+
 ## Expo-Specific Guidelines
 
 ### Pre-Commit Checks
@@ -17,14 +29,34 @@ Before committing any changes:
 
 ### Platform-Specific Naming Conventions
 
-- **iOS-related code**: Use `IOS` in naming (e.g., `PurchaseIOS`, `SubscriptionOfferIOS`)
+#### Field Naming
+- **iOS-related fields**: Use `IOS` suffix (e.g., `displayNameIOS`, `discountsIOS`, `introductoryPriceIOS`)
   - **Exception**: When an acronym appears at the end of a field name, use uppercase (e.g., `quantityIOS`, `appBundleIdIOS`, not `quantityIos`)
-- **Android-related code**: Use `Android` in naming (e.g., `PurchaseAndroid`, `SubscriptionOfferAndroid`)
-- **IAP-related code**: Use `Iap` in naming (e.g., `IapPurchase`, not `IAPPurchase`)
-- **ID fields**: Use `Id` instead of `ID` in field names (e.g., `productId`, `transactionId`, not `productID`, `transactionID`)
-  - This applies across all platforms for consistency
-  - Examples: `productId`, `originalTransactionId`, `purchaseId`
-- This applies to both functions, types, and file names
+  - Platform-specific fields: `currencyCodeIOS`, `currencySymbolIOS`, `countryCodeIOS`
+  - Product fields: `isFamilyShareableIOS`, `jsonRepresentationIOS`, `subscriptionInfoIOS`
+- **Android-related fields**: Use `Android` suffix (e.g., `nameAndroid`)
+  - Platform-specific fields: `oneTimePurchaseOfferDetailsAndroid`, `subscriptionOfferDetailsAndroid`
+  - Keep `pricingPhases` (not `pricingPhasesAndroid`) for consistency with Google Play Billing
+- **Common fields**: Fields shared across platforms go in Common types (e.g., `ids`, `platform`, `debugDescription`)
+  - Use these for data that exists on both platforms without platform-specific variations
+
+#### Type Naming
+- **iOS types**: Use `IOS` suffix (e.g., `PurchaseIOS`, `ProductIOS`)
+- **Android types**: Use descriptive prefixes to identify subtypes:
+  - ✅ Good: `ProductAndroidOneTimePurchaseOfferDetail`, `ProductSubscriptionAndroidOfferDetails`, `PurchaseAndroidState`
+  - ❌ Avoid: `OneTimePurchaseOfferDetails`, `SubscriptionOfferAndroid`, `PurchaseStateAndroid`
+- **General IAP types**: Use `Iap` prefix (e.g., `IapPurchase`, not `IAPPurchase`)
+
+#### General Rules
+- **ID fields**: Use `Id` instead of `ID` (e.g., `productId`, `transactionId`, not `productID`, `transactionID`)
+- **Consistent naming**: This applies to functions, types, and file names
+- **Deprecation**: Fields without platform suffixes will be removed in v2.9.0
+
+### Type System
+
+For complete type definitions and documentation, see: <https://www.openiap.dev/docs/types>
+
+The library follows the OpenIAP type specifications with platform-specific extensions using iOS/Android suffixes.
 
 ### React/JSX Conventions
 
