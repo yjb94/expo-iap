@@ -1,6 +1,6 @@
 {
   "name": "expo-iap",
-  "version": "2.3.7",
+  "version": "2.8.1",
   "description": "In App Purchase module in Expo",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -8,11 +8,12 @@
     "build": "expo-module build",
     "clean": "expo-module clean",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx src",
-    "lint:eslint": "eslint --fix '**/*.{ts,tsx}'",
+    "lint:eslint": "eslint --fix 'src/**/*.{ts,tsx}' 'plugin/src/**/*.{ts,tsx}'",
     "lint:prettier": "prettier --write \"**/*.{md,js,jsx,ts,tsx}\"",
     "lint:tsc": "tsc -p tsconfig.json --noEmit --skipLibCheck",
-    "lint:ci": "yarn lint:tsc && yarn lint:eslint && yarn lint:prettier",
-    "test": "expo-module test",
+    "lint:ci": "bun run lint:tsc && bun run lint:eslint && bun run lint:prettier",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
     "prepare": "expo-module prepare",
     "expo-module": "expo-module",
     "open:ios": "xed example/ios",
@@ -20,7 +21,11 @@
     "lint:kotlin": "ktlint --format ./android",
     "build:plugin": "tsc --build plugin",
     "clean:plugin": "expo-module clean plugin",
-    "lint:plugin": "eslint plugin/src/*"
+    "lint:plugin": "eslint plugin/src/*",
+    "docs:start": "cd docs && bun run start",
+    "docs:build": "cd docs && bun run build",
+    "docs:serve": "cd docs && bun run serve",
+    "docs:install": "cd docs && bun install"
   },
   "keywords": [
     "react-native",
@@ -30,24 +35,30 @@
   ],
   "repository": "https://github.com/hyochan/expo-iap",
   "bugs": {
-    "url": "https://github.com/hyochan/issues"
+    "url": "https://github.com/hyochan/expo-iap/issues"
   },
   "author": "hyochan <hyochan.dev@gmail.com> (https://github.com/hyochan)",
   "license": "MIT",
-  "homepage": "https://github.com/hyochan#readme",
-  "dependencies": {},
+  "homepage": "https://github.com/hyochan/expo-iap#readme",
   "devDependencies": {
-    "@types/react": "~18.2.79",
+    "@jest/globals": "^30.0.5",
+    "@types/jest": "^30.0.0",
+    "@types/react": "~19.1.7",
     "eslint": "8.57.0",
-    "eslint-config-expo": "^7.1.2",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.1.3",
-    "expo-module-scripts": "^3.5.2",
-    "expo-modules-core": "~1.12.26"
+    "eslint-config-expo": "^9.2.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.4.1",
+    "expo-module-scripts": "^4.1.7",
+    "expo-modules-core": "^2.4.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.4.1"
   },
   "peerDependencies": {
     "expo": "*",
     "react": "*",
     "react-native": "*"
+  },
+  "expo": {
+    "plugin": "./app.plugin.js"
   }
 }

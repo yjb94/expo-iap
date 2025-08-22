@@ -1,27 +1,80 @@
-<img src="https://github.com/user-attachments/assets/f51a4b1b-b257-47bf-afe7-5ef8692f0594" />
+# Expo IAP
 
-[![Version](http://img.shields.io/npm/v/expo-iap.svg?style=flat-square)](https://npmjs.org/package/expo-iap) [![Download](http://img.shields.io/npm/dm/expo-iap.svg?style=flat-square)](https://npmjs.org/package/expo-iap) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhyochan%2Fexpo-iap.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhyochan%2Fexpo-iap?ref=badge_shield&issueType=license)
+<div align="center">
+  <img src="https://expo-iap.hyo.dev/img/icon.png" alt="Expo IAP Logo" width="150" />
+  
+  [![Version](http://img.shields.io/npm/v/expo-iap.svg?style=flat-square)](https://npmjs.org/package/expo-iap) [![Download](http://img.shields.io/npm/dm/expo-iap.svg?style=flat-square)](https://npmjs.org/package/expo-iap) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fhyochan%2Fexpo-iap.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fhyochan%2Fexpo-iap?ref=badge_shield&issueType=license)
+  
+  In app purchase module in [Expo](https://docs.expo.dev/guides/in-app-purchases) that conforms to the [Open IAP specification](https://openiap.dev)
+  
+  <a href="https://openiap.dev"><img src="https://openiap.dev/logo.png" alt="Open IAP" height="40" /></a>
+</div>
 
-In App Purchase module in Expo
+## 📚 Documentation
 
-# Notice
+**[📖 Visit our comprehensive documentation site →](https://expo-iap.hyo.dev)**
+
+## Notice
 
 The `expo-iap` module has been migrated from [react-native-iap](https://github.com/dooboolab/react-native-iap). Moving forward, the `react-native-iap` repository will gradually be deprecated, and `expo-iap` will become the actively maintained module. Please take note of this transition. For more details, refer to the [Future Roadmap and Discussion in react-native-iap](https://github.com/dooboolab-community/react-native-iap/discussions/2754). Additionally, you can check the [Current Project Status comment](https://github.com/dooboolab-community/react-native-iap/discussions/2754#discussioncomment-10510249) to stay updated on the project's progress.
 
-# API documentation
+## Installation
 
-- [Documentation](./iap.md)
+```bash
+npx expo install expo-iap
+```
+
+### Android Configuration
+
+**Important:** For Android, `expo-iap` uses Google Play Billing Library v8.0.0 which requires Kotlin 2.0+. Since `expo-modules-core` doesn't support Kotlin v2 yet, you need to configure your project with `expo-build-properties`:
+
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "2.0.21"
+          }
+        }
+      ]
+    ]
+  }
+}
+```
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details on:
+
+- Development setup
+- Running the example app
+- Testing guidelines
+- Code style and conventions
+- Submitting pull requests
+
+For detailed usage examples and error handling, see the [documentation](https://expo-iap.hyo.dev).
 
 > Sharing your thoughts—any feedback would be greatly appreciated!
 
 ## Sponsors
 
-### <p style="color: gold;">Gold Tier</p>
+💼 **[View Our Sponsors](https://openiap.dev/sponsors)**
 
-<a href="https://www.courier.com/?utm_source=react-native-iap&utm_campaign=osssponsors">
-    <img width="420" alt="courier_dot_com" src="https://github.com/user-attachments/assets/319d8966-6839-498d-8ead-ce8cc72c3bca" />
+### <p style="color: rgb(255, 182, 193);">Angel</p>
+
+<a href="https://meta.com">
+    <img width="600" alt="courier_dot_com" src="https://static.xx.fbcdn.net/rsrc.php/y3/r/y6QsbGgc866.svg" />
 </a>
 
-## Past Sponsors
+### <p style="color: rgb(205, 127, 50);">Bronze</p>
 
-<a href="https://namiml.com"><img src="https://github.com/hyochan/react-native-iap/assets/27461460/89d71f61-bb73-400a-83bd-fe0f96eb726e" width="280"/></a>
+<a href="https://www.courier.com/?utm_source=react-native-iap&utm_campaign=osssponsors">
+    <img width="160" alt="courier_dot_com" src="https://github.com/user-attachments/assets/319d8966-6839-498d-8ead-ce8cc72c3bca" />
+</a>
+
+## Past Supporters
+
+<a href="https://namiml.com" style="opacity: 50%"><img src="https://github.com/hyochan/react-native-iap/assets/27461460/89d71f61-bb73-400a-83bd-fe0f96eb726e" alt="Nami ML" width="140"/></a>

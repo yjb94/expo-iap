@@ -5,16 +5,20 @@ import android.util.Log
 import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
+import com.android.billingclient.api.BillingConfig
 import com.android.billingclient.api.BillingFlowParams
 import com.android.billingclient.api.BillingFlowParams.SubscriptionUpdateParams
+import com.android.billingclient.api.BillingConfigResponseListener
 import com.android.billingclient.api.BillingResult
 import com.android.billingclient.api.ConsumeParams
+import com.android.billingclient.api.GetBillingConfigParams
+import com.android.billingclient.api.PendingPurchasesParams
 import com.android.billingclient.api.ProductDetails
+import com.android.billingclient.api.ProductDetailsResult
 import com.android.billingclient.api.Purchase
-import com.android.billingclient.api.PurchaseHistoryRecord
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
-import com.android.billingclient.api.QueryPurchaseHistoryParams
+import com.android.billingclient.api.QueryProductDetailsResult
 import com.android.billingclient.api.QueryPurchasesParams
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
@@ -28,16 +32,6 @@ class ExpoIapModule :
     PurchasesUpdatedListener {
     companion object {
         const val TAG = "ExpoIapModule"
-        const val E_NOT_PREPARED = "E_NOT_PREPARED"
-        const val E_INIT_CONNECTION = "E_INIT_CONNECTION"
-        const val E_QUERY_PRODUCT = "E_QUERY_PRODUCT"
-        const val EMPTY_SKU_LIST = "EMPTY_SKU_LIST"
-        private const val PROMISE_BUY_ITEM = "PROMISE_BUY_ITEM"
-    }
-
-    object IapEvent {
-        const val PURCHASE_UPDATED = "purchase-updated"
-        const val PURCHASE_ERROR = "purchase-error"
     }
 
     private var billingClientCache: BillingClient? = null
@@ -60,6 +54,21 @@ class ExpoIapModule :
                     "responseCode" to responseCode,
                     "debugMessage" to billingResult.debugMessage,
                 )
+            // Add sub-response code if available (v8.0.0+)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                try {
+                    val subResponseCode = billingResult.javaClass.getMethod("getSubResponseCode").invoke(billingResult) as? Int
+                    if (subResponseCode != null && subResponseCode != 0) {
+                        error["subResponseCode"] = subResponseCode
+                        // Check for specific sub-response codes
+                        if (subResponseCode == 1) { // PAYMENT_DECLINED_DUE_TO_INSUFFICIENT_FUNDS
+                            error["subResponseMessage"] = "Payment declined due to insufficient funds"
+                        }
+                    }
+                } catch (e: Exception) {
+                    // Method doesn't exist in older versions, ignore
+                }
+            }
             val errorData = PlayUtils.getBillingResponseData(responseCode)
             error["code"] = errorData.code
             error["message"] = errorData.message
@@ -68,7 +77,7 @@ class ExpoIapModule :
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to send PURCHASE_ERROR event: ${e.message}")
             }
-            PromiseUtils.rejectPromisesForKey(PROMISE_BUY_ITEM, errorData.code, errorData.message, null)
+            PromiseUtils.rejectPromisesForKey(IapConstants.PROMISE_BUY_ITEM, errorData.code, errorData.message, null)
             return
         }
 
@@ -77,12 +86,14 @@ class ExpoIapModule :
             purchases.forEach { purchase ->
                 val item =
                     mutableMapOf<String, Any?>(
-                        "id" to purchase.products.firstOrNull() as Any?,
+                        "id" to purchase.orderId,
+                        "productId" to purchase.products.firstOrNull() as Any?,
                         "ids" to purchase.products,
-                        "transactionId" to purchase.orderId,
+                        "transactionId" to purchase.orderId, // @deprecated - use id instead
                         "transactionDate" to purchase.purchaseTime.toDouble(),
                         "transactionReceipt" to purchase.originalJson,
                         "purchaseTokenAndroid" to purchase.purchaseToken,
+                        "purchaseToken" to purchase.purchaseToken,
                         "dataAndroid" to purchase.originalJson,
                         "signatureAndroid" to purchase.signature,
                         "autoRenewingAndroid" to purchase.isAutoRenewing,
@@ -103,7 +114,7 @@ class ExpoIapModule :
                     Log.e(TAG, "Failed to send PURCHASE_UPDATED event: ${e.message}")
                 }
             }
-            PromiseUtils.resolvePromisesForKey(PROMISE_BUY_ITEM, promiseItems)
+            PromiseUtils.resolvePromisesForKey(IapConstants.PROMISE_BUY_ITEM, promiseItems)
         } else {
             val result =
                 mutableMapOf<String, Any?>(
@@ -118,7 +129,7 @@ class ExpoIapModule :
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to send PURCHASE_UPDATED event: ${e.message}")
             }
-            PromiseUtils.resolvePromisesForKey(PROMISE_BUY_ITEM, result)
+            PromiseUtils.resolvePromisesForKey(IapConstants.PROMISE_BUY_ITEM, result)
         }
     }
 
@@ -126,7 +137,9 @@ class ExpoIapModule :
         ModuleDefinition {
             Name("ExpoIap")
 
-            Constants("PI" to Math.PI)
+            Constants(
+                "ERROR_CODES" to IapErrorCode.toMap()
+            )
 
             Events(IapEvent.PURCHASE_UPDATED, IapEvent.PURCHASE_ERROR)
 
@@ -153,7 +166,7 @@ class ExpoIapModule :
                         }
 
                     if (skuList.isEmpty()) {
-                        promise.reject(EMPTY_SKU_LIST, "The SKU list is empty.", null)
+                        promise.reject(IapConstants.EMPTY_SKU_LIST, "The SKU list is empty.", null)
                         return@ensureConnection
                     }
 
@@ -163,16 +176,18 @@ class ExpoIapModule :
                             .setProductList(skuList)
                             .build()
 
-                    billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
+                    billingClient.queryProductDetailsAsync(params) { billingResult: BillingResult, productDetailsResult: QueryProductDetailsResult ->
                         if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
                             promise.reject(
-                                E_QUERY_PRODUCT,
+                                IapErrorCode.E_QUERY_PRODUCT,
                                 "Error querying product details: ${billingResult.debugMessage}",
                                 null,
                             )
                             return@queryProductDetailsAsync
                         }
 
+                        val productDetailsList = productDetailsResult.productDetailsList ?: emptyList()
+                        
                         val items =
                             productDetailsList.map { productDetails ->
                                 skus[productDetails.productId] = productDetails
@@ -184,48 +199,65 @@ class ExpoIapModule :
                                     ?: productDetails.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice
                                     ?: "N/A"
 
+                                // Prepare reusable data
+                                val oneTimePurchaseData = productDetails.oneTimePurchaseOfferDetails?.let {
+                                    mapOf(
+                                        "priceCurrencyCode" to it.priceCurrencyCode,
+                                        "formattedPrice" to it.formattedPrice,
+                                        "priceAmountMicros" to it.priceAmountMicros.toString(),
+                                    )
+                                }
+                                
+                                val subscriptionOfferData = productDetails.subscriptionOfferDetails?.map { subscriptionOfferDetailsItem ->
+                                    mapOf(
+                                        "basePlanId" to subscriptionOfferDetailsItem.basePlanId,
+                                        "offerId" to subscriptionOfferDetailsItem.offerId,
+                                        "offerToken" to subscriptionOfferDetailsItem.offerToken,
+                                        "offerTags" to subscriptionOfferDetailsItem.offerTags,
+                                        "pricingPhases" to
+                                            mapOf(
+                                                "pricingPhaseList" to
+                                                    subscriptionOfferDetailsItem.pricingPhases.pricingPhaseList.map
+                                                        { pricingPhaseItem ->
+                                                            mapOf(
+                                                                "formattedPrice" to pricingPhaseItem.formattedPrice,
+                                                                "priceCurrencyCode" to pricingPhaseItem.priceCurrencyCode,
+                                                                "billingPeriod" to pricingPhaseItem.billingPeriod,
+                                                                "billingCycleCount" to pricingPhaseItem.billingCycleCount,
+                                                                "priceAmountMicros" to
+                                                                    pricingPhaseItem.priceAmountMicros.toString(),
+                                                                "recurrenceMode" to pricingPhaseItem.recurrenceMode,
+                                                            )
+                                                        },
+                                            ),
+                                    )
+                                }
+
+                                // Convert Android productType to our expected 'inapp' or 'subs'
+                                val productType = if (productDetails.productType == BillingClient.ProductType.SUBS) "subs" else "inapp"
+                                
                                 mapOf(
                                     "id" to productDetails.productId,
                                     "title" to productDetails.title,
                                     "description" to productDetails.description,
-                                    "type" to productDetails.productType,
-                                    "displayName" to productDetails.name,
+                                    "type" to productType,
+                                    // New field names with Android suffix
+                                    "nameAndroid" to productDetails.name,
+                                    "oneTimePurchaseOfferDetailsAndroid" to oneTimePurchaseData,
+                                    "subscriptionOfferDetailsAndroid" to subscriptionOfferData,
                                     "platform" to "android",
                                     "currency" to currency,
                                     "displayPrice" to displayPrice,
-                                    "oneTimePurchaseOfferDetails" to
-                                        productDetails.oneTimePurchaseOfferDetails?.let {
-                                            mapOf(
-                                                "priceCurrencyCode" to it.priceCurrencyCode,
-                                                "formattedPrice" to it.formattedPrice,
-                                                "priceAmountMicros" to it.priceAmountMicros.toString(),
-                                            )
-                                        },
-                                    "subscriptionOfferDetails" to
-                                        productDetails.subscriptionOfferDetails?.map { subscriptionOfferDetailsItem ->
-                                            mapOf(
-                                                "basePlanId" to subscriptionOfferDetailsItem.basePlanId,
-                                                "offerId" to subscriptionOfferDetailsItem.offerId,
-                                                "offerToken" to subscriptionOfferDetailsItem.offerToken,
-                                                "offerTags" to subscriptionOfferDetailsItem.offerTags,
-                                                "pricingPhases" to
-                                                    mapOf(
-                                                        "pricingPhaseList" to
-                                                            subscriptionOfferDetailsItem.pricingPhases.pricingPhaseList.map
-                                                                { pricingPhaseItem ->
-                                                                    mapOf(
-                                                                        "formattedPrice" to pricingPhaseItem.formattedPrice,
-                                                                        "priceCurrencyCode" to pricingPhaseItem.priceCurrencyCode,
-                                                                        "billingPeriod" to pricingPhaseItem.billingPeriod,
-                                                                        "billingCycleCount" to pricingPhaseItem.billingCycleCount,
-                                                                        "priceAmountMicros" to
-                                                                            pricingPhaseItem.priceAmountMicros.toString(),
-                                                                        "recurrenceMode" to pricingPhaseItem.recurrenceMode,
-                                                                    )
-                                                                },
-                                                    ),
-                                            )
-                                        },
+                                    // START: Deprecated - will be removed in v2.9.0
+                                    // Use nameAndroid instead of displayName
+                                    "displayName" to productDetails.name,
+                                    // Use nameAndroid instead of name
+                                    "name" to productDetails.name,
+                                    // Use oneTimePurchaseOfferDetailsAndroid instead of oneTimePurchaseOfferDetails
+                                    "oneTimePurchaseOfferDetails" to oneTimePurchaseData,
+                                    // Use subscriptionOfferDetailsAndroid instead of subscriptionOfferDetails
+                                    "subscriptionOfferDetails" to subscriptionOfferData,
+                                    // END: Deprecated - will be removed in v2.9.0
                                 )
                             }
                         promise.resolve(items)
@@ -247,14 +279,15 @@ class ExpoIapModule :
                         purchases?.forEach { purchase ->
                             val item =
                                 mutableMapOf<String, Any?>(
-                                    // kept for convenience/backward-compatibility. productIds has the complete list
-                                    "id" to purchase.products.firstOrNull() as Any?,
+                                    "id" to purchase.orderId,
+                                    "productId" to purchase.products.firstOrNull() as Any?,
                                     "ids" to purchase.products,
-                                    "transactionId" to purchase.orderId,
+                                    "transactionId" to purchase.orderId, // @deprecated - use id instead
                                     "transactionDate" to purchase.purchaseTime.toDouble(),
                                     "transactionReceipt" to purchase.originalJson,
                                     "orderId" to purchase.orderId,
                                     "purchaseTokenAndroid" to purchase.purchaseToken,
+                                    "purchaseToken" to purchase.purchaseToken,
                                     "developerPayloadAndroid" to purchase.developerPayload,
                                     "signatureAndroid" to purchase.signature,
                                     "purchaseStateAndroid" to purchase.purchaseState,
@@ -274,45 +307,8 @@ class ExpoIapModule :
                 }
             }
 
-            AsyncFunction("getPurchaseHistoryByType") { type: String, promise: Promise ->
-                ensureConnection(promise) { billingClient ->
-                    billingClient.queryPurchaseHistoryAsync(
-                        QueryPurchaseHistoryParams
-                            .newBuilder()
-                            .setProductType(
-                                if (type == "subs") BillingClient.ProductType.SUBS else BillingClient.ProductType.INAPP,
-                            ).build(),
-                    ) { billingResult: BillingResult, purchaseHistoryRecordList: List<PurchaseHistoryRecord>? ->
-
-                        if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
-                            PlayUtils.rejectPromiseWithBillingError(
-                                promise,
-                                billingResult.responseCode,
-                            )
-                            return@queryPurchaseHistoryAsync
-                        }
-
-                        Log.d(TAG, purchaseHistoryRecordList.toString())
-                        val items = mutableListOf<Map<String, Any?>>()
-                        purchaseHistoryRecordList?.forEach { purchase ->
-                            val item =
-                                mutableMapOf<String, Any?>(
-                                    "id" to purchase.products.firstOrNull() as Any?,
-                                    "ids" to purchase.products,
-                                    "transactionDate" to purchase.purchaseTime.toDouble(),
-                                    "transactionReceipt" to purchase.originalJson,
-                                    "purchaseTokenAndroid" to purchase.purchaseToken,
-                                    "dataAndroid" to purchase.originalJson,
-                                    "signatureAndroid" to purchase.signature,
-                                    "developerPayload" to purchase.developerPayload,
-                                    "platform" to "android",
-                                )
-                            items.add(item)
-                        }
-                        promise.resolve(items)
-                    }
-                }
-            }
+            // getPurchaseHistoryByType removed in Google Play Billing Library v8
+            // Use getAvailableItemsByType instead to get active purchases
 
             AsyncFunction("buyItemByType") { params: Map<String, Any?>, promise: Promise ->
                 val type = params["type"] as String
@@ -330,12 +326,12 @@ class ExpoIapModule :
                 val isOfferPersonalized = params["isOfferPersonalized"] as? Boolean ?: false
 
                 if (currentActivity == null) {
-                    promise.reject("E_UNKNOWN", "getCurrentActivity returned null", null)
+                    promise.reject(IapErrorCode.E_UNKNOWN, "getCurrentActivity returned null", null)
                     return@AsyncFunction
                 }
 
                 ensureConnection(promise) { billingClient ->
-                    PromiseUtils.addPromiseForKey(PROMISE_BUY_ITEM, promise)
+                    PromiseUtils.addPromiseForKey(IapConstants.PROMISE_BUY_ITEM, promise)
 
                     if (type == BillingClient.ProductType.SUBS && skuArr.size != offerTokenArr.size) {
                         val debugMessage = "The number of skus (${skuArr.size}) must match: the number of offerTokens (${offerTokenArr.size}) for Subscriptions"
@@ -344,14 +340,14 @@ class ExpoIapModule :
                                 IapEvent.PURCHASE_ERROR,
                                 mapOf(
                                     "debugMessage" to debugMessage,
-                                    "code" to "E_SKU_OFFER_MISMATCH",
+                                    "code" to IapErrorCode.E_SKU_OFFER_MISMATCH,
                                     "message" to debugMessage,
                                 )
                             )
                         } catch (e: Exception) {
                             Log.e(TAG, "Failed to send PURCHASE_ERROR event: ${e.message}")
                         }
-                        promise.reject("E_SKU_OFFER_MISMATCH", debugMessage, null)
+                        promise.reject(IapErrorCode.E_SKU_OFFER_MISMATCH, debugMessage, null)
                         return@ensureConnection
                     }
 
@@ -366,7 +362,7 @@ class ExpoIapModule :
                                         IapEvent.PURCHASE_ERROR,
                                         mapOf(
                                             "debugMessage" to debugMessage,
-                                            "code" to "E_SKU_NOT_FOUND",
+                                            "code" to IapErrorCode.E_SKU_NOT_FOUND,
                                             "message" to debugMessage,
                                             "productId" to sku,
                                         ),
@@ -374,7 +370,7 @@ class ExpoIapModule :
                                 } catch (e: Exception) {
                                     Log.e(TAG, "Failed to send PURCHASE_ERROR event: ${e.message}")
                                 }
-                                promise.reject("E_SKU_NOT_FOUND", debugMessage, null)
+                                promise.reject(IapErrorCode.E_SKU_NOT_FOUND, debugMessage, null)
                                 return@ensureConnection
                             }
 
@@ -430,7 +426,50 @@ class ExpoIapModule :
 
                     if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
                         val errorData = PlayUtils.getBillingResponseData(billingResult.responseCode)
-                        promise.reject(errorData.code, billingResult.debugMessage, null)
+                        var errorMessage = billingResult.debugMessage ?: errorData.message
+                        var subResponseCode: Int? = null
+                        
+                        // Check for sub-response codes (v8.0.0+)
+                        try {
+                            subResponseCode = billingResult.javaClass.getMethod("getSubResponseCode").invoke(billingResult) as? Int
+                            if (subResponseCode != null && subResponseCode != 0) {
+                                if (subResponseCode == 1) { // PAYMENT_DECLINED_DUE_TO_INSUFFICIENT_FUNDS
+                                    errorMessage = "$errorMessage (Payment declined due to insufficient funds)"
+                                } else {
+                                    errorMessage = "$errorMessage (Sub-response code: $subResponseCode)"
+                                }
+                            }
+                        } catch (e: Exception) {
+                            // Method doesn't exist in older versions, ignore
+                        }
+                        
+                        // Send error event to match iOS behavior
+                        val errorMap = mutableMapOf<String, Any?>(
+                            "responseCode" to billingResult.responseCode,
+                            "debugMessage" to billingResult.debugMessage,
+                            "code" to errorData.code,
+                            "message" to errorMessage
+                        )
+                        
+                        // Add product ID if available
+                        if (skuArr.isNotEmpty()) {
+                            errorMap["productId"] = skuArr.first()
+                        }
+                        
+                        // Add sub-response code if available
+                        subResponseCode?.let {
+                            if (it != 0) {
+                                errorMap["subResponseCode"] = it
+                            }
+                        }
+                        
+                        try {
+                            sendEvent(IapEvent.PURCHASE_ERROR, errorMap.toMap())
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Failed to send PURCHASE_ERROR event: ${e.message}")
+                        }
+                        
+                        promise.reject(errorData.code, errorMessage, null)
                         return@ensureConnection
                     }
                 }
@@ -496,6 +535,25 @@ class ExpoIapModule :
                     }
                 }
             }
+
+
+            AsyncFunction("getStorefront") {
+                    promise: Promise,
+                ->
+                ensureConnection(promise) { billingClient ->
+                    billingClient.getBillingConfigAsync(
+                        GetBillingConfigParams.newBuilder().build(),
+                        BillingConfigResponseListener { result: BillingResult, config: BillingConfig? ->
+                            if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                                promise.safeResolve(config?.countryCode.orEmpty())
+                            } else {
+                                val debugMessage = result.debugMessage.orEmpty()
+                                promise.safeReject(result.responseCode.toString(), debugMessage)
+                            }
+                        },
+                    )
+                }
+            }
         }
 
     /**
@@ -535,7 +593,7 @@ class ExpoIapModule :
         ) {
             Log.i(TAG, "Google Play Services are not available on this device")
             promise.reject(
-                E_NOT_PREPARED,
+                IapErrorCode.E_NOT_PREPARED,
                 "Google Play Services are not available on this device",
                 null,
             )
@@ -546,7 +604,7 @@ class ExpoIapModule :
             BillingClient
                 .newBuilder(context)
                 .setListener(this)
-                .enablePendingPurchases()
+                .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
                 .build()
 
         billingClientCache?.startConnection(
@@ -554,7 +612,7 @@ class ExpoIapModule :
                 override fun onBillingSetupFinished(billingResult: BillingResult) {
                     if (billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
                         promise.reject(
-                            E_INIT_CONNECTION,
+                            IapErrorCode.E_INIT_CONNECTION,
                             "Billing setup finished with error: ${billingResult.debugMessage}",
                             null,
                         )

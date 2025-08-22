@@ -25,6 +25,8 @@ assignees: ''
 - expo-iap:
 - react-native:
 - Platforms (iOS, Android, emulator, simulator, device):
+- Xcode version:
+- ios target:
 
 **To Reproduce** Steps to reproduce the behavior:
 
